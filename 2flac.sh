@@ -10,7 +10,7 @@
 #  2 lst_audio_src_pass         source pass
 #  2 lst_audio_src_rejected     source no pass
 #  3 lst_audio_wav_decoded      source -> WAV
-#  4 lst_audio_flac_compressed    WAV -> FLAC
+#  4 lst_audio_flac_compressed  WAV -> FLAC
 #  5 source_tag                 TAG -> FLAC
 #
 # Author : Romain Barbarot
@@ -845,7 +845,7 @@ cache_dir="/tmp/2flac"
 # Nb process parrallel (nb of processor)
 nproc=$(nproc --all)
 # Input extention available
-input_ext="ape|flac|m4a|wav"
+input_ext="ape|m4a|wv|wav"
 # ALAC
 ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 # FLAC
