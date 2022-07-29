@@ -23,4 +23,9 @@ Options:
   --wavpack_only          Compress only WAVPACK source.
   -v, --verbose           More verbose, for debug.
 ```
+* ALAC as .m4a
+* Monkey's Audio as .ape
+* WAVPACK as .wv
+* WAV as .wav
+
 Default compression is `-8 -e -p`.

@@ -830,7 +830,6 @@ Options:
 
 Supported source files:
   * ALAC as .m4a
-  * FLAC as .flac
   * Monkey's Audio as .ape
   * WAVPACK as .wv
   * WAV as .wav
