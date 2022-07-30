@@ -96,13 +96,13 @@ test_counter="0"
 # Test
 for file in "${lst_audio_src[@]}"; do
 	(
-	# WAVPACK - Verify integrity
-	if [[ "$re_flac" = "1" ]] && [[ "${file##*.}" = "wv" ]]; then
-		wvunpack $wavpack_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
+	# FLAC - Verify integrity
+	if [[ "$re_flac" = "1" ]] && [[ "${file##*.}" = "flac" ]]; then
+		flac $flac_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
 	else
-		# FLAC - Verify integrity
-		if [[ "${file##*.}" = "flac" ]]; then
-			flac $flac_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
+		# WAVPACK - Verify integrity
+		if [[ "${file##*.}" = "wv" ]]; then
+			wvunpack $wavpack_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
 		# APE - Verify integrity
 		elif [[ "${file##*.}" = "ape" ]]; then
 			mac "$file" -v 2>"${cache_dir}/${file##*/}.decode_error.log"
