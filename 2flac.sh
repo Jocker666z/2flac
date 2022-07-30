@@ -191,7 +191,6 @@ local decode_counter
 
 decode_counter="0"
 
-# WAVPACK - Verify integrity
 if [[ "$re_flac" != "1" ]]; then
 	# APE - Decode
 	for file in "${lst_audio_src_pass[@]}"; do
@@ -238,7 +237,6 @@ if [[ "$re_flac" != "1" ]]; then
 		fi
 	done
 	wait
-fi
 
 	# WAVPACK - Decode
 	for file in "${lst_audio_src_pass[@]}"; do
@@ -262,6 +260,7 @@ fi
 		fi
 	done
 	wait
+fi
 
 # Progress end
 if [[ "$verbose" != "1" ]];then
