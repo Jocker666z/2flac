@@ -19,6 +19,8 @@
 
 # Search & populate array with source files
 search_source_files() {
+local codec_test
+
 if [[ "$re_flac" = "1" ]];then
 	mapfile -t lst_audio_src < <(find "$PWD" -maxdepth 3 -type f -regextype posix-egrep \
 									-iregex '.*\.('flac')$' 2>/dev/null | sort)
@@ -76,11 +78,8 @@ if [[ "${bits16_only}" = "1" ]]; then
 	for i in "${!lst_audio_src[@]}"; do
 		codec_test=$(ffprobe -v error -select_streams a:0 \
 			-show_entries stream=sample_fmt -of csv=s=x:p=0 "${lst_audio_src[i]}"  )
-		if [[ "$codec_test" = "u8" ]] \
-		|| [[ "$codec_test" = "s32" ]] \
-		|| [[ "$codec_test" = "s32p" ]] \
-		|| [[ "$codec_test" = "flt" ]] \
-		|| [[ "$codec_test" = "dbl" ]]; then
+		if [[ "$codec_test" != "s16" ]] \
+		|| [[ "$codec_test" != "s16p" ]]; then
 			unset "lst_audio_src[$i]"
 		fi
 	done
