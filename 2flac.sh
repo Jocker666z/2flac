@@ -79,7 +79,7 @@ if [[ "${bits16_only}" = "1" ]]; then
 		codec_test=$(ffprobe -v error -select_streams a:0 \
 			-show_entries stream=sample_fmt -of csv=s=x:p=0 "${lst_audio_src[i]}"  )
 		if [[ "$codec_test" != "s16" ]] \
-		|| [[ "$codec_test" != "s16p" ]]; then
+		&& [[ "$codec_test" != "s16p" ]]; then
 			unset "lst_audio_src[$i]"
 		fi
 	done
