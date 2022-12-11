@@ -696,14 +696,14 @@ if (( "${#lst_audio_src[@]}" )); then
 			file_target_files_size=$(get_files_size_bytes "${lst_audio_flac_compressed[i]}")
 			file_diff_percentage=$(calc_percent "${file_source_files_size[i]}" "$file_target_files_size")
 			filesPassSizeReduction+=( "$file_diff_percentage" )
-			file_path_truncate=$(echo ${lst_audio_flac_compressed[i]} | rev | cut -d'/' -f-3 | rev)
+			file_path_truncate=$(echo "${lst_audio_flac_compressed[i]}" | rev | cut -d'/' -f-3 | rev)
 			filesPassLabel+=( "(${filesPassSizeReduction[i]}%) ~ .${file_path_truncate}" )
 		done
 	fi
 	# All files rejected size label
 	if (( "${#lst_audio_src_rejected[@]}" )); then
 		for i in "${!lst_audio_src_rejected[@]}"; do
-			file_path_truncate=$(echo ${lst_audio_src_rejected[i]} | rev | cut -d'/' -f-3 | rev)
+			file_path_truncate=$(echo "${lst_audio_src_rejected[i]}" | rev | cut -d'/' -f-3 | rev)
 			filesRejectedLabel+=( ".${file_path_truncate}" )
 		done
 	fi
