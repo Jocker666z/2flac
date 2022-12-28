@@ -840,7 +840,7 @@ core_dependencies=(ffmpeg ffprobe flac mac metaflac wavpack wvtag)
 export PATH=$PATH:/home/$USER/.local/bin
 cache_dir="/tmp/2flac"
 # Nb process parrallel (nb of processor)
-nproc=$(nproc --all)
+nproc=$(grep -cE 'processor' /proc/cpuinfo)
 # Input extention available
 input_ext="ape|m4a|wv|wav"
 # ALAC
