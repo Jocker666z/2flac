@@ -803,7 +803,7 @@ for command in "${core_dependencies[@]}"; do
 		(( n++ )) || true
 	fi
 done
-command_display "2ape"
+command_display "2flac"
 }
 # Usage print
 usage() {
