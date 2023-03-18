@@ -539,7 +539,8 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	for i in "${!tag_name[@]}"; do
 		for tag in "${Vorbis_whitelist[@]}"; do
 			# Vorbis std
-			if [[ "${tag_name[i],,}" = "${tag,,}" ]]; then
+			if [[ "${tag_name[i],,}" = "${tag,,}" ]] \
+			&& [[ -n "${tag_label[i]// }" ]]; then
 				source_tag[$i]="${tag}=${tag_label[i]}"
 				continue 2
 			# reject
