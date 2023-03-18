@@ -2,7 +2,7 @@
 
 Various lossless to FLAC while keeping the tags.
 
-Lossless audio source supported: ALAC, APE, FLAC, WAV, WAVPACK
+Lossless audio source supported: ALAC, APE, DSF, FLAC, WAV, WAVPACK
 
 --------------------------------------------------------------------------------------------------
 ## Install & update
