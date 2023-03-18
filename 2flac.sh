@@ -102,6 +102,16 @@ test_counter="0"
 
 # Test
 for file in "${lst_audio_src[@]}"; do
+	# Progress
+	if ! [[ "$verbose" = "1" ]]; then
+		test_counter=$((test_counter+1))
+		if [[ "${#lst_audio_src[@]}" = "1" ]]; then
+			echo -ne "${test_counter}/${#lst_audio_src[@]} source file is being tested"\\r
+		else
+			echo -ne "${test_counter}/${#lst_audio_src[@]} source files are being tested"\\r
+		fi
+	fi
+
 	(
 	# FLAC - Verify integrity
 	if [[ "$re_flac" = "1" ]] && [[ "${file##*.}" = "flac" ]]; then
@@ -123,17 +133,6 @@ for file in "${lst_audio_src[@]}"; do
 	if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
 		wait -n
 	fi
-
-	# Progress
-	if ! [[ "$verbose" = "1" ]]; then
-		test_counter=$((test_counter+1))
-		if [[ "${#lst_audio_src[@]}" = "1" ]]; then
-			echo -ne "${test_counter}/${#lst_audio_src[@]} source file is being tested"\\r
-		else
-			echo -ne "${test_counter}/${#lst_audio_src[@]} source files are being tested"\\r
-		fi
-	fi
-
 done
 wait
 
