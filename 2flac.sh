@@ -888,6 +888,7 @@ Options:
 
 Supported source files:
   * ALAC as .m4a
+  * DSD as .dsf
   * Monkey's Audio as .ape
   * WAVPACK as .wv
   * WAV as .wav
