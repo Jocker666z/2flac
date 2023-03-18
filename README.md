@@ -19,11 +19,13 @@ Options:
   --re_flac               Recompress WAVPACK source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
+  --dsd_only              Compress only DSD source.
   --wav_only              Compress only WAV source.
   --wavpack_only          Compress only WAVPACK source.
   -v, --verbose           More verbose, for debug.
 ```
 * ALAC as .m4a
+* DSD as .dsf
 * Monkey's Audio as .ape
 * WAVPACK as .wv
 * WAV as .wav

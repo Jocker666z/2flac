@@ -36,6 +36,14 @@ else
 			fi
 		done
 	fi
+	# Keep only DSD if arg --dsd_only
+	if [[ "${dsd_only}" = "1" ]]; then
+		for i in "${!lst_audio_src[@]}"; do
+			if [[ "${lst_audio_src[i]##*.}" != "dsf" ]]; then
+					unset "lst_audio_src[$i]"
+			fi
+		done
+	fi
 	# Keep only WAVPACK if arg --wavpack_only
 	if [[ "${wavpack_only}" = "1" ]]; then
 		for i in "${!lst_audio_src[@]}"; do
@@ -105,8 +113,9 @@ for file in "${lst_audio_src[@]}"; do
 		# APE - Verify integrity
 		elif [[ "${file##*.}" = "ape" ]]; then
 			mac "$file" -v 2>"${cache_dir}/${file##*/}.decode_error.log"
-		# ALAC, WAV - Verify integrity
-		elif [[ "${file##*.}" = "m4a" ]] || [[ "${file##*.}" = "wav" ]]; then
+		# ALAC, DSD, WAV - Verify integrity
+		elif [[ "${file##*.}" = "m4a" ]] || [[ "${file##*.}" = "wav" ]] || \
+			 [[ "${file##*.}" = "dsf" ]]; then
 			ffmpeg -v error -i "$file" -max_muxing_queue_size 9999 -f null - 2>"${cache_dir}/${file##*/}.decode_error.log"
 		fi
 	fi
@@ -219,6 +228,30 @@ if [[ "$re_flac" != "1" ]]; then
 		if [[ "${file##*.}" = "m4a" ]]; then
 			(
 			ffmpeg $ffmpeg_log_lvl -y -i "$file" "${file%.*}.wav"
+			) &
+			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+				wait -n
+			fi
+
+			# Progress
+			if ! [[ "$verbose" = "1" ]]; then
+				decode_counter=$((decode_counter+1))
+				if [[ "${#lst_audio_src_pass[@]}" = "1" ]]; then
+					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source file decoded"\\r
+				else
+					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source files decoded"\\r
+				fi
+			fi
+		fi
+	done
+	wait
+
+	# DSD - Decode
+	for file in "${lst_audio_src_pass[@]}"; do
+		if [[ "${file##*.}" = "dsf" ]]; then
+			(
+			ffmpeg $ffmpeg_log_lvl -y -i "$file" \
+				-c:a pcm_s24le -ar 384000 "${file%.*}.wav"
 			) &
 			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
 				wait -n
@@ -394,6 +427,32 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 						"${file%/*}"/cover."$cover_ext" 2>/dev/null
 				fi
 			fi
+
+		# DSF
+		elif [[ -s "${file%.*}.dsf" ]]; then
+			# Source file tags array
+			mapfile -t source_tag < <( ffprobe -v error -show_entries stream_tags:format_tags \
+										-of default=noprint_wrappers=1 "${file%.*}.dsf" )
+			# Clean array
+			for i in "${!source_tag[@]}"; do
+				source_tag[$i]="${source_tag[$i]//TAG:/}"
+			done
+			# Try to extract cover, if no cover in directory
+			if [[ ! -e "${file%/*}"/cover.jpg ]] \
+			&& [[ ! -e "${file%/*}"/cover.png ]]; then
+				cover_test=$(ffprobe -v error -select_streams v:0 \
+							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.dsf")
+				if [[ -n "$cover_test" ]]; then
+					if [[ "$cover_test" = "png" ]]; then
+						cover_ext="png"
+					elif [[ "$cover_test" = *"jpeg"* ]]; then
+						cover_ext="jpg"
+					fi
+					ffmpeg $ffmpeg_log_lvl -n -i "${file%.*}.dsf" \
+						"${file%/*}"/cover."$cover_ext" 2>/dev/null
+				fi
+			fi
+
 		fi
 	fi
 
@@ -822,6 +881,7 @@ Options:
   --re_flac               Recompress FLAC source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
+  --dsd_only              Compress only DSD source.
   --wav_only              Compress only WAV source.
   --wavpack_only          Compress only WAVPACK source.
   -v, --verbose           More verbose, for debug.
@@ -842,7 +902,7 @@ cache_dir="/tmp/2flac"
 # Nb process parrallel (nb of processor)
 nproc=$(grep -cE 'processor' /proc/cpuinfo)
 # Input extention available
-input_ext="ape|m4a|wv|wav"
+input_ext="ape|dsf|m4a|wv|wav"
 # ALAC
 ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 # FLAC
@@ -959,14 +1019,17 @@ while [[ $# -gt 0 ]]; do
 	"--alac_only")
 		alac_only="1"
 	;;
+	"--ape_only")
+		ape_only="1"
+	;;
+	"--dsd_only")
+		dsd_only="1"
+	;;
 	"--wav_only")
 		wav_only="1"
 	;;
 	"--wavpack_only")
 		wavpack_only="1"
-	;;
-	"--ape_only")
-		ape_only="1"
 	;;
 	-v|--verbose)
 		verbose="1"
