@@ -735,7 +735,6 @@ done
 }
 # Summary of processing
 summary_of_processing() {
-local diff_in_s
 local time_formated
 local file_target_files_size
 local file_diff_percentage
@@ -745,8 +744,7 @@ local total_diff_size
 local total_diff_percentage
 
 if (( "${#lst_audio_src[@]}" )); then
-	diff_in_s=$(( stop_process_time - start_process_time ))
-	time_formated="$((diff_in_s/3600))h$((diff_in_s%3600/60))m$((diff_in_s%60))s"
+	time_formated="$((SECONDS/3600))h$((SECONDS%3600/60))m$((SECONDS%60))s"
 
 	# All files pass size stats & label
 	if (( "${#lst_audio_src_pass[@]}" )); then
@@ -1054,9 +1052,6 @@ find "$cache_dir/" -type f -mtime +1 -exec /bin/rm -f {} \;
 # Test dependencies
 command_test
 
-# Start time counter of process
-start_process_time=$(date +%s)
-
 # Find source files
 search_source_files
 
@@ -1081,7 +1076,6 @@ if (( "${#lst_audio_src[@]}" )); then
 	tags_2_flac
 
 	# End
-	stop_process_time=$(date +%s)
 	summary_of_processing
 	if (( "${#lst_audio_flac_compressed[@]}" )); then
 		remove_source_files
