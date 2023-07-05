@@ -120,12 +120,9 @@ for file in "${lst_audio_src[@]}"; do
 		# WAVPACK - Verify integrity
 		if [[ "${file##*.}" = "wv" ]]; then
 			wvunpack $wavpack_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
-		# APE - Verify integrity
-		elif [[ "${file##*.}" = "ape" ]]; then
-			mac "$file" -v 2>"${cache_dir}/${file##*/}.decode_error.log"
-		# ALAC, DSD, WAV - Verify integrity
+		# APE, ALAC, DSD, WAV - Verify integrity
 		elif [[ "${file##*.}" = "m4a" ]] || [[ "${file##*.}" = "wav" ]] || \
-			 [[ "${file##*.}" = "dsf" ]]; then
+			 [[ "${file##*.}" = "ape" ]] || [[ "${file##*.}" = "dsf" ]]; then
 			ffmpeg -v error -i "$file" -max_muxing_queue_size 9999 -f null - 2>"${cache_dir}/${file##*/}.decode_error.log"
 		fi
 	fi
@@ -146,14 +143,6 @@ for file in "${lst_audio_src[@]}"; do
 			flac $flac_fix_arg "$file"
 			# Re-test, if no valid 2 times exclude
 			flac $flac_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
-		fi
-	fi
-
-	# APE - Special not support stderr
-	if [[ "${file##*.}" = "ape" ]]; then
-		ape_test=$(< "${cache_dir}/${file##*/}.decode_error.log" tail -1)
-		if [[ "$ape_test" = "Success..." ]]; then
-			rm "${cache_dir}/${file##*/}.decode_error.log"  2>/dev/null
 		fi
 	fi
 
@@ -199,32 +188,9 @@ local decode_counter
 decode_counter="0"
 
 if [[ "$re_flac" != "1" ]]; then
-	# APE - Decode
+	# APE, ALAC - Decode
 	for file in "${lst_audio_src_pass[@]}"; do
-		if [[ "${file##*.}" = "ape" ]]; then
-			(
-			mac "$file" "${file%.*}.wav" -d &>/dev/null
-			) &
-			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
-				wait -n
-			fi
-
-			# Progress
-			if ! [[ "$verbose" = "1" ]]; then
-				decode_counter=$((decode_counter+1))
-				if [[ "${#lst_audio_src_pass[@]}" = "1" ]]; then
-					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source file decoded"\\r
-				else
-					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source files decoded"\\r
-				fi
-			fi
-		fi
-	done
-	wait
-
-	# ALAC - Decode
-	for file in "${lst_audio_src_pass[@]}"; do
-		if [[ "${file##*.}" = "m4a" ]]; then
+		if [[ "${file##*.}" = "m4a" ]] || [[ "${file##*.}" = "ape" ]]; then
 			(
 			ffmpeg $ffmpeg_log_lvl -y -i "$file" "${file%.*}.wav"
 			) &
@@ -628,7 +594,7 @@ fi
 
 # Clean + target array
 for i in "${!lst_audio_wav_decoded[@]}"; do
-	# Array of ape target
+	# Array of FLAC target
 	lst_audio_flac_compressed+=( "${lst_audio_wav_decoded[i]%.*}.flac" )
 
 	# Remove temp wav files
@@ -894,7 +860,7 @@ EOF
 }
 
 # Need Dependencies
-core_dependencies=(ffmpeg ffprobe flac mac metaflac wavpack wvtag)
+core_dependencies=(ffmpeg ffprobe flac metaflac wavpack wvtag)
 # Paths
 export PATH=$PATH:/home/$USER/.local/bin
 cache_dir="/tmp/2flac"
