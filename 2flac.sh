@@ -603,7 +603,7 @@ for i in "${!lst_audio_wav_decoded[@]}"; do
 	fi
 done
 }
-# Total size calculation in Mb - Input must be in bytes
+# Total size calculation in MB - Input must be in bytes
 calc_files_size() {
 local files
 local size
@@ -773,6 +773,15 @@ if [[ "$re_flac" != "1" ]]; then
 			;;
 		esac
 	fi
+else
+	if [ "${#lst_audio_flac_compressed[@]}" -gt 0 ] ; then
+		read -r -p "Press a key for quit." qarm
+		case $qarm in
+			*)
+				exit
+			;;
+		esac
+	fi
 fi
 }
 # Remove target files
@@ -793,9 +802,6 @@ fi
 command_label() {
 if [[ "$command" = "ffprobe" ]]; then
 	command="$command (ffmpeg package)"
-fi
-if [[ "$command" = "mac" ]]; then
-	command="$command (monkeys-audio package)"
 fi
 if [[ "$command" = "metaflac" ]]; then
 	command="$command (flac package)"
