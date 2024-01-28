@@ -299,6 +299,10 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	unset source_tag_temp2
 	unset tag_name
 	unset tag_label
+	unset tracktotal
+	unset disctotal
+	unset releasetype
+	unset originaldate_exist
 
 	# FLAC
 	if [[ "$re_flac" = "1" ]]; then
@@ -495,23 +499,34 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		# iTune
 		source_tag[$i]="${source_tag[$i]//MusicBrainz Album Artist Id=/MUSICBRAINZ_ALBUMARTISTID=}"
 		# Waste fix
+		shopt -s nocasematch
 		source_tag[$i]="${source_tag[$i]//date=/DATE=}"
+		source_tag[$i]="${source_tag[$i]//originaldate=/ORIGINALDATE=}"
+		shopt -u nocasematch
 	done
 
-	# Whitelist parsing
+	# Array tag name & label
 	mapfile -t tag_name < <( printf '%s\n' "${source_tag[@]}" | awk -F "=" '{print $1}' )
 	mapfile -t tag_label < <( printf '%s\n' "${source_tag[@]}" | cut -f2- -d'=' )
+
+	# Whitelist parsing
 	for i in "${!tag_name[@]}"; do
 		for tag in "${Vorbis_whitelist[@]}"; do
 			# Vorbis std
 			if [[ "${tag_name[i],,}" = "${tag,,}" ]] \
 			&& [[ -n "${tag_label[i]// }" ]]; then
 				# Picard std
+				if [[ "${tag}" = "TRACKNUMBER" ]] ; then
+					source_tag+=( "TOTALTRACKS=${tag_label[i]#*/}" )
+				fi
+				if [[ "${tag}" = "DISCNUMBER" ]] ; then
+					source_tag+=( "TOTALDISCS=${tag_label[i]#*/}" )
+				fi
 				if [[ "${tag}" = "TRACKNUMBER" ]] \
 				|| [[ "${tag}" = "DISCNUMBER" ]]; then
 					tag_label[i]="${tag_label[i]%/*}"
 				fi
-				source_tag[$i]="${tag}=${tag_label[i]}"
+				source_tag[$i]="${tag}=\"${tag_label[i]}\""
 				continue 2
 			# reject
 			else
