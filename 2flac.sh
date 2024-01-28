@@ -293,12 +293,12 @@ grab_tag_counter="0"
 for file in "${lst_audio_flac_compressed[@]}"; do
 
 	# Reset
-	source_tag=()
-	source_tag_temp=()
-	source_tag_temp1=()
-	source_tag_temp2=()
-	tag_name=()
-	tag_label=()
+	unset source_tag
+	unset source_tag_temp
+	unset source_tag_temp1
+	unset source_tag_temp2
+	unset tag_name
+	unset tag_label
 
 	# FLAC
 	if [[ "$re_flac" = "1" ]]; then
@@ -506,6 +506,11 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			# Vorbis std
 			if [[ "${tag_name[i],,}" = "${tag,,}" ]] \
 			&& [[ -n "${tag_label[i]// }" ]]; then
+				# Picard std
+				if [[ "${tag}" = "TRACKNUMBER" ]] \
+				|| [[ "${tag}" = "DISCNUMBER" ]]; then
+					tag_label[i]="${tag_label[i]%/*}"
+				fi
 				source_tag[$i]="${tag}=${tag_label[i]}"
 				continue 2
 			# reject
@@ -514,10 +519,6 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			fi
 		done
 	done
-
-	# Add encoder ape tags
-	source_tag+=( "ENCODEDBY=${flac_version}" )
-	source_tag+=( "ENCODERSETTINGS=${flac_compress_arg}" )
 
 	# Remove duplicate tags
 	mapfile -t source_tag < <( printf '%s\n' "${source_tag[@]}" | sort -u )
@@ -874,7 +875,7 @@ cache_dir="/tmp/2flac"
 nproc=$(grep -cE 'processor' /proc/cpuinfo)
 # Input extention available
 input_ext="ape|dsf|m4a|wv|wav"
-# ALAC
+# FFMPEG
 ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 # FLAC
 flac_version=$(flac -v)
@@ -886,7 +887,7 @@ wavpack_test_arg="-q -v"
 wavpack_decode_arg="-q -w -y"
 # Tag whitelist according with:
 # https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html
-# Ommit: ENCODEDBY, ENCODERSETTINGS = special case for rewrite this
+# Ommit: ENCODEDBY, ENCODERSETTINGS
 Vorbis_whitelist=(
 	'ACOUSTID_ID'
 	'ACOUSTID_FINGERPRINT'
