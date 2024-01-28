@@ -299,10 +299,6 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	unset source_tag_temp2
 	unset tag_name
 	unset tag_label
-	unset tracktotal
-	unset disctotal
-	unset releasetype
-	unset originaldate_exist
 
 	# FLAC
 	if [[ "$re_flac" = "1" ]]; then
