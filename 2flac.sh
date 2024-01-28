@@ -522,7 +522,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 				|| [[ "${tag}" = "DISCNUMBER" ]]; then
 					tag_label[i]="${tag_label[i]%/*}"
 				fi
-				source_tag[$i]="${tag}=\"${tag_label[i]}\""
+				source_tag[$i]="${tag}=${tag_label[i]}"
 				continue 2
 			# reject
 			else
