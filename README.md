@@ -31,6 +31,6 @@ Options:
 * WAV as .wav
 
 Notes: 
-* FLAC default compression is `-8 -e -p`.
-* DSF is converted at the FLAC codec limit = 24bit/384kHz.
+* FLAC compression is `-8 -e -p`.
+* DSF is converted at 24bit/192kHz, for a coherent final file size.
 * Converted tags are according with musicbrainz (as far as possible) (https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html).

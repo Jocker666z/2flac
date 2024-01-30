@@ -228,7 +228,7 @@ if [[ "$re_flac" != "1" ]]; then
 		if [[ "${file##*.}" = "dsf" ]]; then
 			(
 			ffmpeg $ffmpeg_log_lvl -y -i "$file" \
-				-c:a pcm_s24le -ar 384000 "${file%.*}.wav"
+				-c:a pcm_s24le -ar 192000 "${file%.*}.wav"
 			) &
 			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
 				wait -n
