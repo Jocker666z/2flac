@@ -30,4 +30,7 @@ Options:
 * WAVPACK as .wv
 * WAV as .wav
 
-Default compression is `-8 -e -p`.
+Notes: 
+* Default compression is `-8 -e -p`.
+* DSF is converted at the FLAC codec limit = 24bit/384kHz.
+
