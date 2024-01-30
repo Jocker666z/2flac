@@ -126,6 +126,16 @@ for file in "${lst_audio_src[@]}"; do
 			ffmpeg -v error -i "$file" \
 				-vn -sn -dn -max_muxing_queue_size 9999 \
 				-f null - 2>"${cache_dir}/${file##*/}.decode_error.log"
+
+			# Ignore ffmpeg non-blocking errors
+			if [ -s "${cache_dir}/${file##*/}.decode_error.log" ]; then
+				# [mjpeg @ ...] unable to decode APP fields...
+				if < "${cache_dir}/${file##*/}.decode_error.log" \
+					grep  -E "mjpeg.*APP fields" &>/dev/null; then
+					rm "${cache_dir}/${file##*/}.decode_error.log"
+				fi
+			fi
+
 		fi
 	fi
 	) &
@@ -358,7 +368,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			if [[ ! -e "${file%/*}"/cover.jpg ]] \
 			&& [[ ! -e "${file%/*}"/cover.png ]]; then
 				cover_test=$(ffprobe -v error -select_streams v:0 \
-							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.ape")
+							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.ape" 2>/dev/null)
 				if [[ -n "$cover_test" ]]; then
 					if [[ "$cover_test" = "png" ]]; then
 						cover_ext="png"
@@ -383,7 +393,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			if [[ ! -e "${file%/*}"/cover.jpg ]] \
 			&& [[ ! -e "${file%/*}"/cover.png ]]; then
 				cover_test=$(ffprobe -v error -select_streams v:0 \
-							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.m4a")
+							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.m4a" 2>/dev/null)
 				if [[ -n "$cover_test" ]]; then
 					if [[ "$cover_test" = "png" ]]; then
 						cover_ext="png"
@@ -408,7 +418,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			if [[ ! -e "${file%/*}"/cover.jpg ]] \
 			&& [[ ! -e "${file%/*}"/cover.png ]]; then
 				cover_test=$(ffprobe -v error -select_streams v:0 \
-							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.dsf")
+							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.dsf" 2>/dev/null)
 				if [[ -n "$cover_test" ]]; then
 					if [[ "$cover_test" = "png" ]]; then
 						cover_ext="png"
