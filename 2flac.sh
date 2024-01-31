@@ -441,12 +441,10 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		# MusicBrainz internal name
 		source_tag[i]="${source_tag[i]//albumartistsort=/ALBUMARTISTSORT=}"
 		source_tag[i]="${source_tag[i]//artistsort=/ARTISTSORT=}"
-		source_tag[i]="${source_tag[i]//musicbrainz_artistid=/MUSICBRAINZ_ARTISTID=}"
 		source_tag[i]="${source_tag[i]//musicbrainz_albumid=/MUSICBRAINZ_ALBUMID=}"
 		source_tag[i]="${source_tag[i]//musicbrainz_artistid=/MUSICBRAINZ_ARTISTID=}"
+		source_tag[i]="${source_tag[i]//musicbrainz_recordingid=/MUSICBRAINZ_TRACKID=}"
 		source_tag[i]="${source_tag[i]//musicbrainz_releasegroupid=/MUSICBRAINZ_RELEASEGROUPID=}"
-		source_tag[i]="${source_tag[i]//musicbrainz_releasetrackid=/MUSICBRAINZ_RELEASETRACKID=}"
-		source_tag[i]="${source_tag[i]//musicbrainz_trackid=/MUSICBRAINZ_RELEASETRACKID=}"
 		source_tag[i]="${source_tag[i]//originalyear=/ORIGINALYEAR=}"
 		source_tag[i]="${source_tag[i]//replaygain_album_gain=/REPLAYGAIN_ALBUM_GAIN=}"
 		source_tag[i]="${source_tag[i]//replaygain_album_peak=/REPLAYGAIN_ALBUM_PEAK=}"
