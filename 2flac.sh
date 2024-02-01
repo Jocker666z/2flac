@@ -220,7 +220,11 @@ for file in "${lst_audio_src_pass[@]}"; do
 	fi
 
 	# FLAC target array
-	lst_audio_wav_decoded+=( "${cache_dir}/${file##*/}.wav" )
+	if [[ "${file##*.}" = "wav" ]]; then
+		lst_audio_wav_decoded+=( "$file" )
+	else
+		lst_audio_wav_decoded+=( "${cache_dir}/${file##*/}.wav" )
+	fi
 
 done
 wait
@@ -494,15 +498,15 @@ local compress_counter
 
 compress_counter="0"
 
-for file in "${lst_audio_src_pass[@]}"; do
+for i in "${!lst_audio_src_pass[@]}"; do
 	# Compress FLAC
 	(
 	if [[ "$verbose" = "1" ]]; then
-		flac $flac_compress_arg "${cache_dir}/${file##*/}.wav" \
-			-o "${file%.*}".flac
+		flac $flac_compress_arg "${lst_audio_wav_decoded[i]}" \
+			-o "${lst_audio_src_pass[i]%.*}".flac
 	else
-		flac $flac_compress_arg "${cache_dir}/${file##*/}.wav" \
-			-o "${file%.*}".flac &>/dev/null
+		flac $flac_compress_arg "${lst_audio_wav_decoded[i]}" \
+			-o "${lst_audio_src_pass[i]%.*}".flac &>/dev/null
 	fi
 	) &
 	if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
