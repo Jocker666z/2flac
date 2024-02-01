@@ -21,65 +21,60 @@
 search_source_files() {
 local codec_test
 
-if [[ "$re_flac" = "1" ]];then
-	mapfile -t lst_audio_src < <(find "$PWD" -maxdepth 3 -type f -regextype posix-egrep \
-									-iregex '.*\.('flac')$' 2>/dev/null | sort)
-else
-	mapfile -t lst_audio_src < <(find "$PWD" -maxdepth 3 -type f -regextype posix-egrep \
-									-iregex '.*\.('$input_ext')$' 2>/dev/null | sort)
+mapfile -t lst_audio_src < <(find "$PWD" -maxdepth 3 -type f -regextype posix-egrep \
+								-iregex '.*\.('$input_ext')$' 2>/dev/null | sort)
 
-	# Keep only ALAC if arg --alac_only
-	if [[ "${alac_only}" = "1" ]]; then
-		for i in "${!lst_audio_src[@]}"; do
-			if [[ "${lst_audio_src[i]##*.}" != "m4a" ]]; then
-					unset "lst_audio_src[i]"
-			fi
-		done
-	fi
-	# Keep only DSD if arg --dsd_only
-	if [[ "${dsd_only}" = "1" ]]; then
-		for i in "${!lst_audio_src[@]}"; do
-			if [[ "${lst_audio_src[i]##*.}" != "dsf" ]]; then
-					unset "lst_audio_src[i]"
-			fi
-		done
-	fi
-	# Keep only WAVPACK if arg --wavpack_only
-	if [[ "${wavpack_only}" = "1" ]]; then
-		for i in "${!lst_audio_src[@]}"; do
-			if [[ "${lst_audio_src[i]##*.}" != "wv" ]]; then
-					unset "lst_audio_src[i]"
-			fi
-		done
-	fi
-	# Keep only WAV if arg --wav_only
-	if [[ "${wav_only}" = "1" ]]; then
-		for i in "${!lst_audio_src[@]}"; do
-			if [[ "${lst_audio_src[i]##*.}" != "wav" ]]; then
-					unset "lst_audio_src[i]"
-			fi
-		done
-	fi
-	# Keep only Monkey's Audio if arg --ape_only
-	if [[ "${ape_only}" = "1" ]]; then
-		for i in "${!lst_audio_src[@]}"; do
-			if [[ "${lst_audio_src[i]##*.}" != "ape" ]]; then
-					unset "lst_audio_src[i]"
-			fi
-		done
-	fi
-	# Keep only ALAC codec among m4a files
+# Keep only ALAC if arg --alac_only
+if [[ "${alac_only}" = "1" ]]; then
 	for i in "${!lst_audio_src[@]}"; do
-		# Keep only ALAC codec among m4a files
-		if [[ "${lst_audio_src[i]##*.}" = "m4a" ]]; then
-			codec_test=$(ffprobe -v error -select_streams a:0 \
-				-show_entries stream=codec_name -of csv=s=x:p=0 "${lst_audio_src[i]%.*}.m4a"  )
-			if [[ "$codec_test" != "alac" ]]; then
+		if [[ "${lst_audio_src[i]##*.}" != "m4a" ]]; then
 				unset "lst_audio_src[i]"
-			fi
 		fi
 	done
 fi
+# Keep only DSD if arg --dsd_only
+if [[ "${dsd_only}" = "1" ]]; then
+	for i in "${!lst_audio_src[@]}"; do
+		if [[ "${lst_audio_src[i]##*.}" != "dsf" ]]; then
+				unset "lst_audio_src[i]"
+		fi
+	done
+fi
+# Keep only WAVPACK if arg --wavpack_only
+if [[ "${wavpack_only}" = "1" ]]; then
+	for i in "${!lst_audio_src[@]}"; do
+		if [[ "${lst_audio_src[i]##*.}" != "wv" ]]; then
+				unset "lst_audio_src[i]"
+		fi
+	done
+fi
+# Keep only WAV if arg --wav_only
+if [[ "${wav_only}" = "1" ]]; then
+	for i in "${!lst_audio_src[@]}"; do
+		if [[ "${lst_audio_src[i]##*.}" != "wav" ]]; then
+				unset "lst_audio_src[i]"
+		fi
+	done
+fi
+# Keep only Monkey's Audio if arg --ape_only
+if [[ "${ape_only}" = "1" ]]; then
+	for i in "${!lst_audio_src[@]}"; do
+		if [[ "${lst_audio_src[i]##*.}" != "ape" ]]; then
+				unset "lst_audio_src[i]"
+		fi
+	done
+fi
+# Keep only ALAC codec among m4a files
+for i in "${!lst_audio_src[@]}"; do
+	# Keep only ALAC codec among m4a files
+	if [[ "${lst_audio_src[i]##*.}" = "m4a" ]]; then
+		codec_test=$(ffprobe -v error -select_streams a:0 \
+			-show_entries stream=codec_name -of csv=s=x:p=0 "${lst_audio_src[i]%.*}.m4a"  )
+		if [[ "$codec_test" != "alac" ]]; then
+			unset "lst_audio_src[i]"
+		fi
+	fi
+done
 
 # Keep only 16 bits source if arg --16bits_only
 if [[ "${bits16_only}" = "1" ]]; then
@@ -113,30 +108,25 @@ for file in "${lst_audio_src[@]}"; do
 	fi
 
 	(
-	# FLAC - Verify integrity
-	if [[ "$re_flac" = "1" ]] && [[ "${file##*.}" = "flac" ]]; then
-		flac $flac_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
-	else
-		# WAVPACK - Verify integrity
-		if [[ "${file##*.}" = "wv" ]]; then
-			wvunpack $wavpack_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
-		# APE, ALAC, DSD, WAV - Verify integrity
-		elif [[ "${file##*.}" = "m4a" ]] || [[ "${file##*.}" = "wav" ]] || \
-			 [[ "${file##*.}" = "ape" ]] || [[ "${file##*.}" = "dsf" ]]; then
-			ffmpeg -v error -i "$file" \
-				-vn -sn -dn -max_muxing_queue_size 9999 \
-				-f null - 2>"${cache_dir}/${file##*/}.decode_error.log"
+	# WAVPACK - Verify integrity
+	if [[ "${file##*.}" = "wv" ]]; then
+		wvunpack $wavpack_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
+	# APE, ALAC, DSD, WAV - Verify integrity
+	elif [[ "${file##*.}" = "m4a" ]] || [[ "${file##*.}" = "wav" ]] || \
+		 [[ "${file##*.}" = "ape" ]] || [[ "${file##*.}" = "dsf" ]]; then
+		ffmpeg -v error -i "$file" \
+			-vn -sn -dn -max_muxing_queue_size 9999 \
+			-f null - 2>"${cache_dir}/${file##*/}.decode_error.log"
 
-			# Ignore ffmpeg non-blocking errors
-			if [ -s "${cache_dir}/${file##*/}.decode_error.log" ]; then
-				# [mjpeg @ ...] unable to decode APP fields...
-				if < "${cache_dir}/${file##*/}.decode_error.log" \
-					grep  -E "mjpeg.*APP fields" &>/dev/null; then
-					rm "${cache_dir}/${file##*/}.decode_error.log"
-				fi
+		# Ignore ffmpeg non-blocking errors
+		if [ -s "${cache_dir}/${file##*/}.decode_error.log" ]; then
+			# [mjpeg @ ...] unable to decode APP fields...
+			if < "${cache_dir}/${file##*/}.decode_error.log" \
+				grep  -E "mjpeg.*APP fields" &>/dev/null; then
+				rm "${cache_dir}/${file##*/}.decode_error.log"
 			fi
-
 		fi
+
 	fi
 	) &
 	if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
@@ -199,98 +189,51 @@ local decode_counter
 
 decode_counter="0"
 
-if [[ "$re_flac" != "1" ]]; then
-	# APE, ALAC - Decode
-	for file in "${lst_audio_src_pass[@]}"; do
-		if [[ "${file##*.}" = "m4a" ]] || [[ "${file##*.}" = "ape" ]]; then
-			(
-			ffmpeg $ffmpeg_log_lvl -y -i "$file" "${file%.*}.wav"
-			) &
-			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
-				wait -n
-			fi
+for file in "${lst_audio_src_pass[@]}"; do
+	(
 
-			# Progress
-			if ! [[ "$verbose" = "1" ]]; then
-				decode_counter=$((decode_counter+1))
-				if [[ "${#lst_audio_src_pass[@]}" = "1" ]]; then
-					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source file decoded"\\r
-				else
-					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source files decoded"\\r
-				fi
-			fi
+	if [[ "${file##*.}" = "ape" ]] || [[ "${file##*.}" = "m4a" ]]; then
+		ffmpeg $ffmpeg_log_lvl -y -i "$file" "${cache_dir}/${file##*/}.wav"
+
+	elif [[ "${file##*.}" = "dsf" ]]; then
+		ffmpeg $ffmpeg_log_lvl -y -i "$file" \
+			-c:a pcm_s24le -ar 384000 "${cache_dir}/${file##*/}.wav"
+
+	elif [[ "${file##*.}" = "wv" ]]; then
+		wvunpack $wavpack_decode_arg "$file" -o "${cache_dir}/${file##*/}.wav"
+
+	fi
+
+	) &
+	if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+		wait -n
+	fi
+
+	# Progress
+	if ! [[ "$verbose" = "1" ]]; then
+		decode_counter=$((decode_counter+1))
+		if [[ "${#lst_audio_src_pass[@]}" = "1" ]]; then
+			echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source file decoded"\\r
+		else
+			echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source files decoded"\\r
 		fi
-	done
-	wait
+	fi
 
-	# DSD - Decode
-	for file in "${lst_audio_src_pass[@]}"; do
-		if [[ "${file##*.}" = "dsf" ]]; then
-			(
-			ffmpeg $ffmpeg_log_lvl -y -i "$file" \
-				-c:a pcm_s24le -ar 192000 "${file%.*}.wav"
-			) &
-			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
-				wait -n
-			fi
+	# FLAC target array
+	lst_audio_wav_decoded+=( "${cache_dir}/${file##*/}.wav" )
 
-			# Progress
-			if ! [[ "$verbose" = "1" ]]; then
-				decode_counter=$((decode_counter+1))
-				if [[ "${#lst_audio_src_pass[@]}" = "1" ]]; then
-					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source file decoded"\\r
-				else
-					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source files decoded"\\r
-				fi
-			fi
-		fi
-	done
-	wait
-
-	# WAVPACK - Decode
-	for file in "${lst_audio_src_pass[@]}"; do
-		if [[ "${file##*.}" = "wv" ]]; then
-			(
-			wvunpack $wavpack_decode_arg "$file"
-			) &
-			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
-				wait -n
-			fi
-
-			# Progress
-			if ! [[ "$verbose" = "1" ]]; then
-				decode_counter=$((decode_counter+1))
-				if [[ "${#lst_audio_src_pass[@]}" = "1" ]]; then
-					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source file decoded"\\r
-				else
-					echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source files decoded"\\r
-				fi
-			fi
-		fi
-	done
-	wait
-fi
+done
+wait
 
 # Progress end
 if [[ "$verbose" != "1" ]];then
-	if [[ "$re_flac" != "1" ]];then
-		tput hpa 0; tput el
-		if [[ "${#lst_audio_src_pass[@]}" = "1" ]]; then
-			echo "${decode_counter} source file decoded"
-		else
-			echo "${decode_counter} source files decoded"
-		fi
+	tput hpa 0; tput el
+	if [[ "${#lst_audio_src_pass[@]}" = "1" ]]; then
+		echo "${decode_counter} source file decoded"
+	else
+		echo "${decode_counter} source files decoded"
 	fi
 fi
-
-# FLAC target array
-for file in "${lst_audio_src_pass[@]}"; do
-	if [[ "$re_flac" = "1" ]]; then
-		lst_audio_wav_decoded+=( "${file%.*}.flac" )
-	else
-		lst_audio_wav_decoded+=( "${file%.*}.wav" )
-	fi
-done
 }
 # Convert tag to VORBIS
 tags_2_flac() {
@@ -312,125 +255,96 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	unset tag_name
 	unset tag_label
 
-	# FLAC
-	if [[ "$re_flac" = "1" ]]; then
-		if [[ -s "${file%.*}.flac" ]]; then
-			# Source file tags array
-			mapfile -t source_tag < <( metaflac "${file%.*}.flac" --export-tags-to=- )
-			# Try to extract cover, if no cover in directory
-			if [[ ! -e "${file%/*}"/cover.jpg ]] \
-			&& [[ ! -e "${file%/*}"/cover.png ]]; then
-				cover_test=$(metaflac --list "${file%.*}.flac" \
-								| grep -A 8 METADATA 2>/dev/null \
-								| grep -A 7 -B 1 PICTURE 2>/dev/null)
-				if [[ -n "$cover_test" ]]; then
-					# Image type
-					cover_image_type=$(echo "$cover_test" | grep "MIME type" \
-						| awk -F " " '{print $NF}' | awk -F "/" '{print $NF}'\
-						| head -1)
-					if [[ "$cover_image_type" = "png" ]]; then
-						cover_ext="png"
-					elif [[ "$cover_image_type" = "jpeg" ]]; then
-						cover_ext="jpg"
-					fi
-					metaflac "${file%.*}.flac" \
-						--export-picture-to="${file%/*}"/cover."$cover_ext"
+	# WAVPACK
+	if [[ -s "${file%.*}.wv" ]]; then
+		# Source file tags array
+		mapfile -t source_tag_temp < <( wvtag -q -l "${file%.*}.wv" \
+									| grep -v -e '^[[:space:]]*$' \
+									| tail -n +2 | sort )
+		# Clean array
+		mapfile -t source_tag_temp1 < <( printf '%s\n' "${source_tag_temp[@]}" \
+										| awk -F ":" '{print $1}' )
+		mapfile -t source_tag_temp2 < <( printf '%s\n' "${source_tag_temp[@]}" \
+										| cut -f2- -d':' | sed 's/^ *//' )
+		for i in "${!source_tag_temp[@]}"; do
+			source_tag+=( "${source_tag_temp1[i]}=${source_tag_temp2[i]}" )
+		done
+
+	# APE
+	elif [[ -s "${file%.*}.ape" ]]; then
+		# Source file tags array
+		mapfile -t source_tag < <( ffprobe -v error -show_entries stream_tags:format_tags \
+									-of default=noprint_wrappers=1 "${file%.*}.ape" )
+		# Clean array
+		for i in "${!source_tag[@]}"; do
+			source_tag[i]="${source_tag[i]//TAG:/}"
+		done
+		# Try to extract cover, if no cover in directory
+		if [[ ! -e "${file%/*}"/cover.jpg ]] \
+		&& [[ ! -e "${file%/*}"/cover.png ]]; then
+			cover_test=$(ffprobe -v error -select_streams v:0 \
+						-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.ape" 2>/dev/null)
+			if [[ -n "$cover_test" ]]; then
+				if [[ "$cover_test" = "png" ]]; then
+					cover_ext="png"
+				elif [[ "$cover_test" = *"jpeg"* ]]; then
+					cover_ext="jpg"
 				fi
+				ffmpeg $ffmpeg_log_lvl -n -i "${file%.*}.ape" \
+					"${file%/*}"/cover."$cover_ext" 2>/dev/null
 			fi
 		fi
-	else
 
-		# WAVPACK
-		if [[ -s "${file%.*}.wv" ]]; then
-			# Source file tags array
-			mapfile -t source_tag_temp < <( wvtag -q -l "${file%.*}.wv" \
-										| grep -v -e '^[[:space:]]*$' \
-										| tail -n +2 | sort )
-			# Clean array
-			mapfile -t source_tag_temp1 < <( printf '%s\n' "${source_tag_temp[@]}" \
-											| awk -F ":" '{print $1}' )
-			mapfile -t source_tag_temp2 < <( printf '%s\n' "${source_tag_temp[@]}" \
-											| cut -f2- -d':' | sed 's/^ *//' )
-			for i in "${!source_tag_temp[@]}"; do
-				source_tag+=( "${source_tag_temp1[i]}=${source_tag_temp2[i]}" )
-			done
-
-		# APE
-		elif [[ -s "${file%.*}.ape" ]]; then
-			# Source file tags array
-			mapfile -t source_tag < <( ffprobe -v error -show_entries stream_tags:format_tags \
-										-of default=noprint_wrappers=1 "${file%.*}.ape" )
-			# Clean array
-			for i in "${!source_tag[@]}"; do
-				source_tag[i]="${source_tag[i]//TAG:/}"
-			done
-			# Try to extract cover, if no cover in directory
-			if [[ ! -e "${file%/*}"/cover.jpg ]] \
-			&& [[ ! -e "${file%/*}"/cover.png ]]; then
-				cover_test=$(ffprobe -v error -select_streams v:0 \
-							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.ape" 2>/dev/null)
-				if [[ -n "$cover_test" ]]; then
-					if [[ "$cover_test" = "png" ]]; then
-						cover_ext="png"
-					elif [[ "$cover_test" = *"jpeg"* ]]; then
-						cover_ext="jpg"
-					fi
-					ffmpeg $ffmpeg_log_lvl -n -i "${file%.*}.ape" \
-						"${file%/*}"/cover."$cover_ext" 2>/dev/null
+	# ALAC
+	elif [[ -s "${file%.*}.m4a" ]]; then
+		# Source file tags array
+		mapfile -t source_tag < <( ffprobe -v error -show_entries stream_tags:format_tags \
+									-of default=noprint_wrappers=1 "${file%.*}.m4a" )
+		# Clean array
+		for i in "${!source_tag[@]}"; do
+			source_tag[i]="${source_tag[i]//TAG:/}"
+		done
+		# Try to extract cover, if no cover in directory
+		if [[ ! -e "${file%/*}"/cover.jpg ]] \
+		&& [[ ! -e "${file%/*}"/cover.png ]]; then
+			cover_test=$(ffprobe -v error -select_streams v:0 \
+						-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.m4a" 2>/dev/null)
+			if [[ -n "$cover_test" ]]; then
+				if [[ "$cover_test" = "png" ]]; then
+					cover_ext="png"
+				elif [[ "$cover_test" = *"jpeg"* ]]; then
+					cover_ext="jpg"
 				fi
+				ffmpeg $ffmpeg_log_lvl -n -i "${file%.*}.m4a" \
+					"${file%/*}"/cover."$cover_ext" 2>/dev/null
 			fi
-
-		# ALAC
-		elif [[ -s "${file%.*}.m4a" ]]; then
-			# Source file tags array
-			mapfile -t source_tag < <( ffprobe -v error -show_entries stream_tags:format_tags \
-										-of default=noprint_wrappers=1 "${file%.*}.m4a" )
-			# Clean array
-			for i in "${!source_tag[@]}"; do
-				source_tag[i]="${source_tag[i]//TAG:/}"
-			done
-			# Try to extract cover, if no cover in directory
-			if [[ ! -e "${file%/*}"/cover.jpg ]] \
-			&& [[ ! -e "${file%/*}"/cover.png ]]; then
-				cover_test=$(ffprobe -v error -select_streams v:0 \
-							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.m4a" 2>/dev/null)
-				if [[ -n "$cover_test" ]]; then
-					if [[ "$cover_test" = "png" ]]; then
-						cover_ext="png"
-					elif [[ "$cover_test" = *"jpeg"* ]]; then
-						cover_ext="jpg"
-					fi
-					ffmpeg $ffmpeg_log_lvl -n -i "${file%.*}.m4a" \
-						"${file%/*}"/cover."$cover_ext" 2>/dev/null
-				fi
-			fi
-
-		# DSF
-		elif [[ -s "${file%.*}.dsf" ]]; then
-			# Source file tags array
-			mapfile -t source_tag < <( ffprobe -v error -show_entries stream_tags:format_tags \
-										-of default=noprint_wrappers=1 "${file%.*}.dsf" )
-			# Clean array
-			for i in "${!source_tag[@]}"; do
-				source_tag[i]="${source_tag[i]//TAG:/}"
-			done
-			# Try to extract cover, if no cover in directory
-			if [[ ! -e "${file%/*}"/cover.jpg ]] \
-			&& [[ ! -e "${file%/*}"/cover.png ]]; then
-				cover_test=$(ffprobe -v error -select_streams v:0 \
-							-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.dsf" 2>/dev/null)
-				if [[ -n "$cover_test" ]]; then
-					if [[ "$cover_test" = "png" ]]; then
-						cover_ext="png"
-					elif [[ "$cover_test" = *"jpeg"* ]]; then
-						cover_ext="jpg"
-					fi
-					ffmpeg $ffmpeg_log_lvl -n -i "${file%.*}.dsf" \
-						"${file%/*}"/cover."$cover_ext" 2>/dev/null
-				fi
-			fi
-
 		fi
+
+	# DSF
+	elif [[ -s "${file%.*}.dsf" ]]; then
+		# Source file tags array
+		mapfile -t source_tag < <( ffprobe -v error -show_entries stream_tags:format_tags \
+									-of default=noprint_wrappers=1 "${file%.*}.dsf" )
+		# Clean array
+		for i in "${!source_tag[@]}"; do
+			source_tag[i]="${source_tag[i]//TAG:/}"
+		done
+		# Try to extract cover, if no cover in directory
+		if [[ ! -e "${file%/*}"/cover.jpg ]] \
+		&& [[ ! -e "${file%/*}"/cover.png ]]; then
+			cover_test=$(ffprobe -v error -select_streams v:0 \
+						-show_entries stream=codec_name -of csv=s=x:p=0 "${file%.*}.dsf" 2>/dev/null)
+			if [[ -n "$cover_test" ]]; then
+				if [[ "$cover_test" = "png" ]]; then
+					cover_ext="png"
+				elif [[ "$cover_test" = *"jpeg"* ]]; then
+					cover_ext="jpg"
+				fi
+				ffmpeg $ffmpeg_log_lvl -n -i "${file%.*}.dsf" \
+					"${file%/*}"/cover."$cover_ext" 2>/dev/null
+			fi
+		fi
+
 	fi
 
 	# Remove empty tag label=
@@ -502,6 +416,8 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		source_tag[i]="${source_tag[i]//MusicBrainz Release Track Id=/MUSICBRAINZ_RELEASETRACKID=}"
 		source_tag[i]="${source_tag[i]//TBPM=/BPM=}"
 		source_tag[i]="${source_tag[i]//TEXT=/LYRICIST=}"
+		source_tag[i]="${source_tag[i]//TSRC=/ISRC=}"
+		source_tag[i]="${source_tag[i]//UFID=/MUSICBRAINZ_TRACKID=}"
 		# iTune
 		source_tag[i]="${source_tag[i]//MusicBrainz Album Artist Id=/MUSICBRAINZ_ALBUMARTISTID=}"
 		# Waste fix
@@ -524,11 +440,11 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 				# Picard std
 				if [[ "${tag}" = "TRACKNUMBER" ]] \
 				&& [[ "${tag_label[i]}" = *"/"* ]]; then
-					source_tag+=( "TOTALTRACKS=\"${tag_label[i]#*/}\"" )
+					source_tag+=( "TOTALTRACKS=${tag_label[i]#*/}" )
 				fi
 				if [[ "${tag}" = "DISCNUMBER" ]] \
 				&& [[ "${tag_label[i]}" = *"/"* ]]; then
-					source_tag+=( "TOTALDISCS=\"${tag_label[i]#*/}\"" )
+					source_tag+=( "TOTALDISCS=${tag_label[i]#*/}" )
 				fi
 				if [[ "${tag}" = "TRACKNUMBER" ]] \
 				|| [[ "${tag}" = "DISCNUMBER" ]]; then
@@ -547,9 +463,6 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	mapfile -t source_tag < <( printf '%s\n' "${source_tag[@]}" | sort -u )
 
 	# Tag FLAC
-	if [[ "$re_flac" = "1" ]]; then
-		metaflac "$file" --remove-all
-	fi
 	for i in "${!source_tag[@]}"; do
 		metaflac "$file" --set-tag="${source_tag[i]}"
 	done
@@ -581,13 +494,15 @@ local compress_counter
 
 compress_counter="0"
 
-for file in "${lst_audio_wav_decoded[@]}"; do
+for file in "${lst_audio_src_pass[@]}"; do
 	# Compress FLAC
 	(
 	if [[ "$verbose" = "1" ]]; then
-		flac $flac_compress_arg "$file"
+		flac $flac_compress_arg "${cache_dir}/${file##*/}.wav" \
+			-o "${file%.*}".flac
 	else
-		flac $flac_compress_arg "$file" &>/dev/null
+		flac $flac_compress_arg "${cache_dir}/${file##*/}.wav" \
+			-o "${file%.*}".flac &>/dev/null
 	fi
 	) &
 	if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
@@ -619,11 +534,11 @@ fi
 # Clean + target array
 for i in "${!lst_audio_wav_decoded[@]}"; do
 	# Array of FLAC target
-	lst_audio_flac_compressed+=( "${lst_audio_wav_decoded[i]%.*}.flac" )
+	lst_audio_flac_compressed+=( "${lst_audio_src_pass[i]%.*}.flac" )
 
 	# Remove temp wav files
 	if [[ "${lst_audio_src[i]##*.}" != "wav" ]]; then
-		rm -f "${lst_audio_src[i]%.*}.wav" 2>/dev/null
+		rm -f "${lst_audio_wav_decoded[i]%.*}.wav" 2>/dev/null
 	fi
 done
 }
@@ -782,30 +697,19 @@ fi
 }
 # Remove source files
 remove_source_files() {
-if [[ "$re_flac" != "1" ]]; then
-	if [ "${#lst_audio_flac_compressed[@]}" -gt 0 ] ; then
-		read -r -p "Remove source files? [y/N]:" qarm
-		case $qarm in
-			"Y"|"y")
-				# Remove source files
-				for file in "${lst_audio_src_pass[@]}"; do
-					rm -f "$file" 2>/dev/null
-				done
-			;;
-			*)
-				source_not_removed="1"
-			;;
-		esac
-	fi
-else
-	if [ "${#lst_audio_flac_compressed[@]}" -gt 0 ] ; then
-		read -r -p "Press a key for quit." qarm
-		case $qarm in
-			*)
-				exit
-			;;
-		esac
-	fi
+if [ "${#lst_audio_flac_compressed[@]}" -gt 0 ] ; then
+	read -r -p "Remove source files? [y/N]:" qarm
+	case $qarm in
+		"Y"|"y")
+			# Remove source files
+			for file in "${lst_audio_src_pass[@]}"; do
+				rm -f "$file" 2>/dev/null
+			done
+		;;
+		*)
+			source_not_removed="1"
+		;;
+	esac
 fi
 }
 # Remove target files
@@ -872,7 +776,6 @@ Usage:
 
 Options:
   --16bits_only           Compress only 16bits source.
-  --re_flac               Recompress FLAC source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
   --dsd_only              Compress only DSD source.
@@ -905,6 +808,7 @@ flac_version=$(flac -v)
 flac_test_arg="--no-md5-sum --no-warnings-as-errors -s -t"
 flac_fix_arg="--totally-silent -f --verify --decode-through-errors"
 flac_compress_arg="-f -8 -e -p"
+flac_decode_arg="--totally-silent -f -d"
 # WAVPACK
 wavpack_test_arg="-q -v"
 wavpack_decode_arg="-q -w -y"
@@ -1007,9 +911,6 @@ while [[ $# -gt 0 ]]; do
 	;;
 	"--16bits_only")
 		bits16_only="1"
-	;;
-	"--re_flac")
-		re_flac="1"
 	;;
 	"--alac_only")
 		alac_only="1"

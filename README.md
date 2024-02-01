@@ -2,7 +2,7 @@
 
 Various lossless to FLAC while keeping the tags.
 
-Lossless audio source supported: ALAC, APE, DSF, FLAC, WAV, WAVPACK
+Lossless audio source supported: ALAC, APE, DSF, WAV, WAVPACK
 
 --------------------------------------------------------------------------------------------------
 ## Install & update
@@ -16,7 +16,6 @@ Processes all compatible files in the current directory and his three subdirecto
 ```
 Options:
   --16bits_only           Compress only 16bits source.
-  --re_flac               Recompress WAVPACK source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
   --dsd_only              Compress only DSD source.
