@@ -4,15 +4,6 @@
 # Various lossless to FLAC while keeping the tags.
 # \(^o^)/ 
 #
-# It does this:
-#    Array namme
-#  1 lst_audio_src              get source list
-#  2 lst_audio_src_pass         source pass
-#  2 lst_audio_src_rejected     source no pass
-#  3 lst_audio_wav_decoded      source -> WAV
-#  4 lst_audio_flac_compressed  WAV -> FLAC
-#  5 source_tag                 TAG -> FLAC
-#
 # Author : Romain Barbarot
 # https://github.com/Jocker666z/2flac/
 # Licence : unlicense
@@ -24,69 +15,58 @@ local codec_test
 mapfile -t lst_audio_src < <(find "$PWD" -maxdepth 3 -type f -regextype posix-egrep \
 								-iregex '.*\.('$input_ext')$' 2>/dev/null | sort)
 
-# Keep only ALAC if arg --alac_only
-if [[ "${alac_only}" = "1" ]]; then
-	for i in "${!lst_audio_src[@]}"; do
-		if [[ "${lst_audio_src[i]##*.}" != "m4a" ]]; then
-				unset "lst_audio_src[i]"
-		fi
-	done
-fi
-# Keep only DSD if arg --dsd_only
-if [[ "${dsd_only}" = "1" ]]; then
-	for i in "${!lst_audio_src[@]}"; do
-		if [[ "${lst_audio_src[i]##*.}" != "dsf" ]]; then
-				unset "lst_audio_src[i]"
-		fi
-	done
-fi
-# Keep only WAVPACK if arg --wavpack_only
-if [[ "${wavpack_only}" = "1" ]]; then
-	for i in "${!lst_audio_src[@]}"; do
-		if [[ "${lst_audio_src[i]##*.}" != "wv" ]]; then
-				unset "lst_audio_src[i]"
-		fi
-	done
-fi
-# Keep only WAV if arg --wav_only
-if [[ "${wav_only}" = "1" ]]; then
-	for i in "${!lst_audio_src[@]}"; do
-		if [[ "${lst_audio_src[i]##*.}" != "wav" ]]; then
-				unset "lst_audio_src[i]"
-		fi
-	done
-fi
-# Keep only Monkey's Audio if arg --ape_only
-if [[ "${ape_only}" = "1" ]]; then
-	for i in "${!lst_audio_src[@]}"; do
-		if [[ "${lst_audio_src[i]##*.}" != "ape" ]]; then
-				unset "lst_audio_src[i]"
-		fi
-	done
-fi
-# Keep only ALAC codec among m4a files
+# Only clean
 for i in "${!lst_audio_src[@]}"; do
-	# Keep only ALAC codec among m4a files
-	if [[ "${lst_audio_src[i]##*.}" = "m4a" ]]; then
-		codec_test=$(ffprobe -v error -select_streams a:0 \
-			-show_entries stream=codec_name -of csv=s=x:p=0 "${lst_audio_src[i]%.*}.m4a"  )
-		if [[ "$codec_test" != "alac" ]]; then
-			unset "lst_audio_src[i]"
-		fi
-	fi
-done
 
-# Keep only 16 bits source if arg --16bits_only
-if [[ "${bits16_only}" = "1" ]]; then
-	for i in "${!lst_audio_src[@]}"; do
+	if [[ "${bits16_only}" = "1" ]]; then
 		codec_test=$(ffprobe -v error -select_streams a:0 \
 			-show_entries stream=sample_fmt -of csv=s=x:p=0 "${lst_audio_src[i]}"  )
 		if [[ "$codec_test" != "s16" ]] \
 		&& [[ "$codec_test" != "s16p" ]]; then
 			unset "lst_audio_src[i]"
 		fi
-	done
-fi
+	fi
+
+	if [[ "${ape_only}" = "1" ]] \
+	&& [[ "${lst_audio_src[i]##*.}" != "ape" ]]; then
+			unset "lst_audio_src[i]"
+	fi
+
+	if [[ "${dsd_only}" = "1" ]] \
+	&& [[ "${lst_audio_src[i]##*.}" != "dsf" ]]; then
+			unset "lst_audio_src[i]"
+	fi
+
+	if [[ "${flac_only}" = "1" ]] \
+	&& [[ "${lst_audio_src[i]##*.}" != "flac" ]]; then
+			unset "lst_audio_src[i]"
+	fi
+
+	if [[ "${M4A_only}" = "1" ]] \
+	&& [[ "${lst_audio_src[i]##*.}" != "m4a" ]]; then
+			unset "lst_audio_src[i]"
+	fi
+	# Keep only ALAC codec among m4a files
+	if [[ "${lst_audio_src[i]##*.}" = "m4a" ]]; then
+		codec_test=$(ffprobe -v error -select_streams a:0 \
+			-show_entries stream=codec_name -of csv=s=x:p=0 \
+			"${lst_audio_src[i]%.*}.m4a" )
+		if [[ "$codec_test" != "alac" ]]; then
+			unset "lst_audio_src[i]"
+		fi
+	fi
+
+	if [[ "${wav_only}" = "1" ]] \
+	&& [[ "${lst_audio_src[i]##*.}" != "wav" ]]; then
+			unset "lst_audio_src[i]"
+	fi
+
+	if [[ "${wavpack_only}" = "1" ]] \
+	&& [[ "${lst_audio_src[i]##*.}" != "wv" ]]; then
+			unset "lst_audio_src[i]"
+	fi
+
+done
 }
 # Verify source integrity
 test_source() {
@@ -111,7 +91,10 @@ for file in "${lst_audio_src[@]}"; do
 	# WAVPACK - Verify integrity
 	if [[ "${file##*.}" = "wv" ]]; then
 		wvunpack $wavpack_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
-	# APE, ALAC, DSD, WAV - Verify integrity
+	# FLAC - Verify integrity
+	elif [[ "${file##*.}" = "flac" ]]; then
+		flac $flac_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
+		# APE, ALAC, DSD, WAV - Verify integrity
 	elif [[ "${file##*.}" = "m4a" ]] || [[ "${file##*.}" = "wav" ]] || \
 		 [[ "${file##*.}" = "ape" ]] || [[ "${file##*.}" = "dsf" ]]; then
 		ffmpeg -v error -i "$file" \
@@ -191,7 +174,6 @@ decode_counter="0"
 
 for file in "${lst_audio_src_pass[@]}"; do
 	(
-
 	if [[ "${file##*.}" = "ape" ]] || [[ "${file##*.}" = "m4a" ]]; then
 		ffmpeg $ffmpeg_log_lvl -y -i "$file" "${cache_dir}/${file##*/}.wav"
 
@@ -203,7 +185,6 @@ for file in "${lst_audio_src_pass[@]}"; do
 		wvunpack $wavpack_decode_arg "$file" -o "${cache_dir}/${file##*/}.wav"
 
 	fi
-
 	) &
 	if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
 		wait -n
@@ -220,7 +201,9 @@ for file in "${lst_audio_src_pass[@]}"; do
 	fi
 
 	# FLAC target array
-	if [[ "${file##*.}" = "wav" ]]; then
+	if [[ "${file##*.}" = "flac" ]]; then
+		lst_audio_wav_decoded+=( "$file" )
+	elif [[ "${file##*.}" = "wav" ]]; then
 		lst_audio_wav_decoded+=( "$file" )
 	else
 		lst_audio_wav_decoded+=( "${cache_dir}/${file##*/}.wav" )
@@ -783,6 +766,7 @@ Options:
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
   --dsd_only              Compress only DSD source.
+  --flac_only             Compress only FLAC source.
   --wav_only              Compress only WAV source.
   --wavpack_only          Compress only WAVPACK source.
   -v, --verbose           More verbose, for debug.
@@ -790,6 +774,7 @@ Options:
 Supported source files:
   * ALAC as .m4a
   * DSD as .dsf
+  * FLAC as .flac
   * Monkey's Audio as .ape
   * WAVPACK as .wv
   * WAV as .wav
@@ -804,7 +789,7 @@ cache_dir="/tmp/2flac"
 # Nb process parrallel (nb of processor)
 nproc=$(grep -cE 'processor' /proc/cpuinfo)
 # Input extention available
-input_ext="ape|dsf|m4a|wv|wav"
+input_ext="ape|dsf|flac|m4a|wv|wav"
 # FFMPEG
 ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 # FLAC
@@ -924,6 +909,9 @@ while [[ $# -gt 0 ]]; do
 	;;
 	"--dsd_only")
 		dsd_only="1"
+	;;
+	"--flac_only")
+		flac_only="1"
 	;;
 	"--wav_only")
 		wav_only="1"
