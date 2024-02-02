@@ -340,10 +340,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 
 	fi
 
-	if [[ -z "$exclude_tag" ]]; then
-
-		# Remove empty tag label=
-		mapfile -t source_tag < <( printf '%s\n' "${source_tag[@]}" | grep "=" )
+	if [[ -z "$exclude_tag" ]] && (( "${#source_tag[@]}" )); then
 
 		# Substitution
 		for i in "${!source_tag[@]}"; do
