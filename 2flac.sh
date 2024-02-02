@@ -240,7 +240,6 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	unset source_tag_temp
 	unset source_tag_temp1
 	unset source_tag_temp2
-	unset exclude_tag
 	unset tag_name
 	unset tag_label
 
@@ -334,13 +333,10 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			fi
 		fi
 
-	# FLAC & WAV exclude
-	else
-		exclude_tag="1"
-
 	fi
 
-	if [[ -z "$exclude_tag" ]] && (( "${#source_tag[@]}" )); then
+	# Exclude no tag source; & FLAC, WAV
+	if (( "${#source_tag[@]}" )); then
 
 		# Substitution
 		for i in "${!source_tag[@]}"; do
