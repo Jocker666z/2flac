@@ -467,6 +467,35 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 
 	fi
 
+
+	# Try to extract cover if no cover in directory & remove embedded
+	cover_test=$(metaflac --list "${file%.*}.flac" \
+					| grep -A 8 METADATA 2>/dev/null \
+					| grep -A 7 -B 1 PICTURE 2>/dev/null)
+	if [[ ! -e "${file%/*}"/cover.jpg ]] \
+	&& [[ ! -e "${file%/*}"/cover.png ]]; then
+		if [[ -n "$cover_test" ]]; then
+			# Image type
+			cover_image_type=$(echo "$cover_test" | grep "MIME type" \
+				| awk -F " " '{print $NF}' | awk -F "/" '{print $NF}'\
+				| head -1)
+			if [[ "$cover_image_type" = "png" ]]; then
+				cover_ext="png"
+			elif [[ "$cover_image_type" = "jpeg" ]]; then
+				cover_ext="jpg"
+			fi
+			# Extract
+			metaflac "${file%.*}.flac" \
+				--export-picture-to="${file%/*}"/cover."$cover_ext"
+		fi
+	fi
+	# Delete embedded
+	if [[ -n "$cover_test" ]]; then
+		metaflac --remove \
+			--block-type=PICTURE,PADDING \
+			--dont-use-padding "$file"
+	fi
+
 done
 
 # Progress end
