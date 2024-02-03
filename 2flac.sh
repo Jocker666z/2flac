@@ -386,9 +386,9 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			source_tag[i]="${source_tag[i]//MusicBrainz Album Artist Id=/MUSICBRAINZ_ALBUMARTISTID=}"
 			# Waste fix
 			shopt -s nocasematch
-		source_tag[i]="${source_tag[i]//date=/DATE=}"
-		source_tag[i]="${source_tag[i]//originaldate=/ORIGINALDATE=}"
-		source_tag[i]="${source_tag[i]//TXXX=originalyear=/ORIGINALYEAR=}"
+			source_tag[i]="${source_tag[i]//date=/DATE=}"
+			source_tag[i]="${source_tag[i]//originaldate=/ORIGINALDATE=}"
+			source_tag[i]="${source_tag[i]//TXXX=originalyear=/ORIGINALYEAR=}"
 			shopt -u nocasematch
 		done
 
