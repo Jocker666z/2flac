@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2001,SC2086
+# shellcheck disable=SC2001,SC2086,SC2207
 # 2flac
 # Various lossless to FLAC while keeping the tags.
 # \(^o^)/ 
@@ -27,6 +27,20 @@ for i in "${!lst_audio_src[@]}"; do
 		fi
 	fi
 
+	if [[ "${alac_only}" = "1" ]] \
+	&& [[ "${lst_audio_src[i]##*.}" != "m4a" ]]; then
+			unset "lst_audio_src[i]"
+	fi
+	# Keep only ALAC codec in m4a
+	if [[ "${lst_audio_src[i]##*.}" = "m4a" ]]; then
+		codec_test=$(ffprobe -v error -select_streams a:0 \
+			-show_entries stream=codec_name -of csv=s=x:p=0 \
+			"${lst_audio_src[i]%.*}.m4a" )
+		if [[ "$codec_test" != "alac" ]]; then
+			unset "lst_audio_src[i]"
+		fi
+	fi
+
 	if [[ "${ape_only}" = "1" ]] \
 	&& [[ "${lst_audio_src[i]##*.}" != "ape" ]]; then
 			unset "lst_audio_src[i]"
@@ -41,20 +55,6 @@ for i in "${!lst_audio_src[@]}"; do
 	&& [[ "${lst_audio_src[i]##*.}" != "flac" \
 	   && "${lst_audio_src[i]##*.}" != "ogg" ]]; then
 			unset "lst_audio_src[i]"
-	fi
-
-	if [[ "${M4A_only}" = "1" ]] \
-	&& [[ "${lst_audio_src[i]##*.}" != "m4a" ]]; then
-			unset "lst_audio_src[i]"
-	fi
-	# Keep only ALAC codec in m4a
-	if [[ "${lst_audio_src[i]##*.}" = "m4a" ]]; then
-		codec_test=$(ffprobe -v error -select_streams a:0 \
-			-show_entries stream=codec_name -of csv=s=x:p=0 \
-			"${lst_audio_src[i]%.*}.m4a" )
-		if [[ "$codec_test" != "alac" ]]; then
-			unset "lst_audio_src[i]"
-		fi
 	fi
 
 	# Keep only FLAC codec in ogg
@@ -81,7 +81,6 @@ done
 }
 # Verify source integrity
 test_source() {
-local ape_test
 local test_counter
 
 test_counter="0"
@@ -234,7 +233,6 @@ local cover_image_type
 local cover_ext
 local tag_label
 local grab_tag_counter
-local exclude_tag
 
 grab_tag_counter="0"
 
@@ -810,7 +808,6 @@ flac_version=$(flac -v)
 flac_test_arg="--no-md5-sum --no-warnings-as-errors -s -t"
 flac_fix_arg="--totally-silent -f --verify --decode-through-errors"
 flac_compress_arg="-f --lax -8pl32"
-flac_decode_arg="--totally-silent -f -d"
 # Tag whitelist according with:
 # https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html
 # Ommit: ENCODEDBY, ENCODERSETTINGS
