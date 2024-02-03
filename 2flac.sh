@@ -38,7 +38,8 @@ for i in "${!lst_audio_src[@]}"; do
 	fi
 
 	if [[ "${flac_only}" = "1" ]] \
-	&& [[ "${lst_audio_src[i]##*.}" != "flac" ]]; then
+	&& [[ "${lst_audio_src[i]##*.}" != "flac" \
+	   && "${lst_audio_src[i]##*.}" != "ogg" ]]; then
 			unset "lst_audio_src[i]"
 	fi
 
