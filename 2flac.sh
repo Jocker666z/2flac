@@ -477,7 +477,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			done
 		done
 
-		# Remove duplicate tags_
+		# Remove duplicate tags
 		mapfile -t source_tag < <( printf '%s\n' "${source_tag[@]}" | uniq -u )
 
 		# Tag FLAC
