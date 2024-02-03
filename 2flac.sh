@@ -46,12 +46,22 @@ for i in "${!lst_audio_src[@]}"; do
 	&& [[ "${lst_audio_src[i]##*.}" != "m4a" ]]; then
 			unset "lst_audio_src[i]"
 	fi
-	# Keep only ALAC codec among m4a files
+	# Keep only ALAC codec in m4a
 	if [[ "${lst_audio_src[i]##*.}" = "m4a" ]]; then
 		codec_test=$(ffprobe -v error -select_streams a:0 \
 			-show_entries stream=codec_name -of csv=s=x:p=0 \
 			"${lst_audio_src[i]%.*}.m4a" )
 		if [[ "$codec_test" != "alac" ]]; then
+			unset "lst_audio_src[i]"
+		fi
+	fi
+
+	# Keep only FLAC codec in ogg
+	if [[ "${lst_audio_src[i]##*.}" = "ogg" ]]; then
+		codec_test=$(ffprobe -v error -select_streams a:0 \
+			-show_entries stream=codec_name -of csv=s=x:p=0 \
+			"${lst_audio_src[i]%.*}.ogg" )
+		if [[ "$codec_test" != "flac" ]]; then
 			unset "lst_audio_src[i]"
 		fi
 	fi
@@ -192,6 +202,7 @@ for file in "${lst_audio_src_pass[@]}"; do
 
 	# FLAC target array
 	if [[ "${file##*.}" = "flac" ]] \
+	|| [[ "${file##*.}" = "ogg" ]] \
 	|| [[ "${file##*.}" = "wav" ]]; then
 		lst_audio_wav_decoded+=( "$file" )
 	else
@@ -562,6 +573,7 @@ for i in "${!lst_audio_wav_decoded[@]}"; do
 
 	# Remove temp wav files
 	if [[ "${lst_audio_src[i]##*.}" != "wav" ]] \
+	|| [[ "${lst_audio_src[i]##*.}" != "ogg" ]] \
 	|| [[ "${lst_audio_src[i]##*.}" != "flac" ]]; then
 		rm -f "${lst_audio_wav_decoded[i]%.*}.wav" 2>/dev/null
 	fi
@@ -812,7 +824,7 @@ Options:
 Supported source files:
   * ALAC as .m4a
   * DSD as .dsf
-  * FLAC as .flac
+  * FLAC as .flac .ogg
   * Monkey's Audio as .ape
   * WAVPACK as .wv
   * WAV as .wav
@@ -827,7 +839,7 @@ cache_dir="/tmp/2flac"
 # Nb process parrallel (nb of processor)
 nproc=$(grep -cE 'processor' /proc/cpuinfo)
 # Input extention available
-input_ext="ape|dsf|flac|m4a|wv|wav"
+input_ext="ape|dsf|flac|m4a|ogg|wv|wav"
 # FFMPEG
 ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 # FLAC

@@ -26,7 +26,7 @@ Options:
 ```
 * ALAC as .m4a
 * DSD as .dsf
-* FLAC as .flac
+* FLAC as .flac .ogg
 * Monkey's Audio as .ape
 * WAVPACK as .wv
 * WAV as .wav
