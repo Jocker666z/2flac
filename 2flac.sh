@@ -351,28 +351,44 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			source_tag[i]="${source_tag[i]//WEBSITE=/Weblink=}"
 			source_tag[i]="${source_tag[i]//Writer=/WRITER=}"
 			# ID3v2
-			source_tag[i]="${source_tag[i]//Acoustid Id=/ACOUSTID_ID=}"
-			source_tag[i]="${source_tag[i]//arranger=/ARRANGER=}"
-			source_tag[i]="${source_tag[i]//description=/COMMENT=}"
-			source_tag[i]="${source_tag[i]//MusicBrainz Album Id=/MUSICBRAINZ_ALBUMID=}"
-			source_tag[i]="${source_tag[i]//MusicBrainz Album Artist Id=/MUSICBRAINZ_ALBUMARTISTID=}"
-			source_tag[i]="${source_tag[i]//MusicBrainz Album Status=/MUSICBRAINZ_ALBUMSTATUS=}"
-			source_tag[i]="${source_tag[i]//MusicBrainz Album Type=/MUSICBRAINZ_ALBUMTYPE=}"
-			source_tag[i]="${source_tag[i]//MusicBrainz Artist Id=/MUSICBRAINZ_ARTISTID=}"
-			source_tag[i]="${source_tag[i]//MusicBrainz Artist Id=/MUSICBRAINZ_ARTISTID=}"
-			source_tag[i]="${source_tag[i]//MusicBrainz Album Release Country=/RELEASECOUNTRY=}"
-			source_tag[i]="${source_tag[i]//MusicBrainz Release Group Id=/MUSICBRAINZ_RELEASEGROUPID=}"
-			source_tag[i]="${source_tag[i]//MusicBrainz Release Track Id=/MUSICBRAINZ_RELEASETRACKID=}"
+			source_tag[i]="${source_tag[i]//TALB=/ALBUM=}"
 			source_tag[i]="${source_tag[i]//TBPM=/BPM=}"
+			source_tag[i]="${source_tag[i]//TDOR=/ORIGINALDATE=}"
+			source_tag[i]="${source_tag[i]//TDRC=/DATE=}"
 			source_tag[i]="${source_tag[i]//TEXT=/LYRICIST=}"
+			source_tag[i]="${source_tag[i]//TIT2=/TITLE=}"
+			source_tag[i]="${source_tag[i]//TMED=/MEDIA=}"
+			source_tag[i]="${source_tag[i]//TPOS=/DISCNUMBER=}"
+			source_tag[i]="${source_tag[i]//TPE1=/ARTIST=}"
+			source_tag[i]="${source_tag[i]//TPE2=/ALBUMARTIST=}"
+			source_tag[i]="${source_tag[i]//TPUB=/LABEL=}"
+			source_tag[i]="${source_tag[i]//TRCK=/TRACKNUMBER=}"
+			source_tag[i]="${source_tag[i]//TSO2=/ALBUMARTISTSORT=}"
+			source_tag[i]="${source_tag[i]//TSOP=/ARTISTSORT=}"
 			source_tag[i]="${source_tag[i]//TSRC=/ISRC=}"
+			source_tag[i]="${source_tag[i]//TXXX=Acoustid Id=/ACOUSTID_ID=}"
+			source_tag[i]="${source_tag[i]//TXXX=Acoustid Fingerprint=/ACOUSTID_FINGERPRINT=}"
+			source_tag[i]="${source_tag[i]//TXXX=ARTISTS=/ARTISTS=}"
+			source_tag[i]="${source_tag[i]//TXXX=ASIN=/ASIN=}"
+			source_tag[i]="${source_tag[i]//TXXX=BARCODE=/BARCODE=}"
+			source_tag[i]="${source_tag[i]//TXXX=CATALOGNUMBER=/CATALOGNUMBER=}"
+			source_tag[i]="${source_tag[i]//TXXX=MusicBrainz Album Id=/MUSICBRAINZ_ALBUMID=}"
+			source_tag[i]="${source_tag[i]//TXXX=MusicBrainz Album Artist Id=/MUSICBRAINZ_ALBUMARTISTID=}"
+			source_tag[i]="${source_tag[i]//TXXX=MusicBrainz Album Status=/RELEASESTATUS=}"
+			source_tag[i]="${source_tag[i]//TXXX=MusicBrainz Album Type=/RELEASETYPE=}"
+			source_tag[i]="${source_tag[i]//TXXX=MusicBrainz Artist Id=/MUSICBRAINZ_ARTISTID=}"
+			source_tag[i]="${source_tag[i]//TXXX=MusicBrainz Album Release Country=/RELEASECOUNTRY=}"
+			source_tag[i]="${source_tag[i]//TXXX=MusicBrainz Release Group Id=/MUSICBRAINZ_RELEASEGROUPID=}"
+			source_tag[i]="${source_tag[i]//TXXX=MusicBrainz Release Track Id=/MUSICBRAINZ_RELEASETRACKID=}"
+			source_tag[i]="${source_tag[i]//TXXX=SCRIPT=/SCRIPT=}"
 			source_tag[i]="${source_tag[i]//UFID=/MUSICBRAINZ_TRACKID=}"
 			# iTune
 			source_tag[i]="${source_tag[i]//MusicBrainz Album Artist Id=/MUSICBRAINZ_ALBUMARTISTID=}"
 			# Waste fix
 			shopt -s nocasematch
-			source_tag[i]="${source_tag[i]//date=/DATE=}"
-			source_tag[i]="${source_tag[i]//originaldate=/ORIGINALDATE=}"
+		source_tag[i]="${source_tag[i]//date=/DATE=}"
+		source_tag[i]="${source_tag[i]//originaldate=/ORIGINALDATE=}"
+		source_tag[i]="${source_tag[i]//TXXX=originalyear=/ORIGINALYEAR=}"
 			shopt -u nocasematch
 		done
 
@@ -387,42 +403,68 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 				if [[ "${tag_name[i],,}" = "${tag,,}" ]] \
 				&& [[ -n "${tag_label[i]// }" ]]; then
 
-					# Picard std
-					if [[ "${tag}" = "TRACKNUMBER" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						source_tag+=( "TOTALTRACKS=${tag_label[i]#*/}" )
-					fi
-					if [[ "${tag}" = "DISCNUMBER" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						source_tag+=( "TOTALDISCS=${tag_label[i]#*/}" )
-					fi
-					if [[ "${tag}" = "TRACKNUMBER" ]] \
-					|| [[ "${tag}" = "DISCNUMBER" ]]; then
-						tag_label[i]="${tag_label[i]%/*}"
-					fi
+				# Picard std
+				if [[ "${tag}" = "TRACKNUMBER" ]] \
+				&& [[ "${tag_label[i]}" = *"/"* ]]; then
+					source_tag+=( "TOTALTRACKS=${tag_label[i]#*/}" )
+				fi
+				if [[ "${tag}" = "DISCNUMBER" ]] \
+				&& [[ "${tag_label[i]}" = *"/"* ]]; then
+					source_tag+=( "TOTALDISCS=${tag_label[i]#*/}" )
+				fi
+				if [[ "${tag}" = "TRACKNUMBER" ]] \
+				|| [[ "${tag}" = "DISCNUMBER" ]]; then
+					tag_label[i]="${tag_label[i]%/*}"
+				fi
 
-					if [[ "${tag}" = "RELEASETYPE" ]] \
-					&& [[ "${tag_label[i]}" = *" / "* ]]; then
-						tag_trick=( $(echo "${tag_label[i]// \/ /|}" \
-										| tr "|" "\n" ) )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "RELEASETYPE=${type}" )
-						done
-					elif [[ "${tag}" = "ISRC" ]] \
-					&& [[ "${tag_label[i]}" = *" / "* ]]; then
-						tag_trick=( $(echo "${tag_label[i]// \/ /|}" \
-										| tr "|" "\n" ) )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "ISRC=${type}" )
-						done
-					elif [[ "${tag}" = "MUSICBRAINZ_ALBUMARTISTID" ]] \
-					&& [[ "${tag_label[i]}" = *" / "* ]]; then
-						tag_trick=( $(echo "${tag_label[i]// \/ /|}" \
-										| tr "|" "\n" ) )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "MUSICBRAINZ_ALBUMARTISTID=${type}" )
-						done
-					else
+				if [[ "${tag}" = "ARTISTS" ]] \
+				&& [[ "${tag_label[i]}" = *"/"* ]]; then
+					mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+									| tr "|" "\n" )
+					for type in "${tag_trick[@]}"; do
+						source_tag+=( "ARTISTS=${type}" )
+					done
+				elif [[ "${tag}" = "MUSICBRAINZ_ARTISTID" ]] \
+				&& [[ "${tag_label[i]}" = *"/"* ]]; then
+					mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+									| tr "|" "\n" )
+					for type in "${tag_trick[@]}"; do
+						source_tag+=( "MUSICBRAINZ_ARTISTID=${type}" )
+					done
+				elif [[ "${tag}" = "ISRC" ]] \
+				&& [[ "${tag_label[i]}" = *"/"* ]]; then
+					mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+									| tr "|" "\n" )
+					for type in "${tag_trick[@]}"; do
+						source_tag+=( "ISRC=${type}" )
+					done
+				elif [[ "${tag}" = "LABEL" ]] \
+				&& [[ "${tag_label[i]}" = *"/"* ]]; then
+					mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+									| tr "|" "\n" )
+					for type in "${tag_trick[@]}"; do
+						source_tag+=( "LABEL=${type}" )
+					done
+				elif [[ "${tag}" = "MUSICBRAINZ_TRACKID" ]] \
+				&& [[ "${tag_label[i]}" = *"'"* ]]; then
+					tag_trick=$(echo "${tag_label[i]}" \
+								| cut  -d "'" -f2)
+					source_tag+=( "MUSICBRAINZ_TRACKID=${tag_trick}" )
+				elif [[ "${tag}" = "MUSICBRAINZ_ALBUMARTISTID" ]] \
+				&& [[ "${tag_label[i]}" = *"/"* ]]; then
+					mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+									| tr "|" "\n" )
+					for type in "${tag_trick[@]}"; do
+						source_tag+=( "MUSICBRAINZ_ALBUMARTISTID=${type}" )
+					done
+				elif [[ "${tag}" = "RELEASETYPE" ]] \
+				&& [[ "${tag_label[i]}" = *"/"* ]]; then
+					mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+									| tr "|" "\n" )
+					for type in "${tag_trick[@]}"; do
+						source_tag+=( "RELEASETYPE=${type}" )
+					done
+				else
 						# Array of tag
 						source_tag[i]="${tag}=${tag_label[i]}"
 					fi
@@ -436,7 +478,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		done
 
 		# Remove duplicate tags
-		mapfile -t source_tag < <( printf '%s\n' "${source_tag[@]}" | sort -u )
+		mapfile -t source_tag < <( printf '%s\n' "${source_tag[@]}" | uniq -u )
 
 		# Tag FLAC
 		for i in "${!source_tag[@]}"; do
