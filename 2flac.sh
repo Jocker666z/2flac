@@ -191,17 +191,16 @@ for file in "${lst_audio_src_pass[@]}"; do
 	fi
 
 	# FLAC target array
-	if [[ "${file##*.}" = "flac" ]]; then
-		lst_audio_wav_decoded+=( "$file" )
-	elif [[ "${file##*.}" = "wav" ]]; then
+	if [[ "${file##*.}" = "flac" ]] \
+	|| [[ "${file##*.}" = "wav" ]]; then
 		lst_audio_wav_decoded+=( "$file" )
 	else
+		decode_counter=$((decode_counter+1))
 		lst_audio_wav_decoded+=( "${cache_dir}/${file##*/}.wav" )
 	fi
 
 	# Progress
 	if ! [[ "$verbose" = "1" ]]; then
-		decode_counter=$((decode_counter+1))
 		if [[ "${#lst_audio_src_pass[@]}" = "1" ]]; then
 			echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source file decoded"\\r
 		else
