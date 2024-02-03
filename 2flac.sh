@@ -190,6 +190,15 @@ for file in "${lst_audio_src_pass[@]}"; do
 		wait -n
 	fi
 
+	# FLAC target array
+	if [[ "${file##*.}" = "flac" ]]; then
+		lst_audio_wav_decoded+=( "$file" )
+	elif [[ "${file##*.}" = "wav" ]]; then
+		lst_audio_wav_decoded+=( "$file" )
+	else
+		lst_audio_wav_decoded+=( "${cache_dir}/${file##*/}.wav" )
+	fi
+
 	# Progress
 	if ! [[ "$verbose" = "1" ]]; then
 		decode_counter=$((decode_counter+1))
@@ -198,15 +207,6 @@ for file in "${lst_audio_src_pass[@]}"; do
 		else
 			echo -ne "${decode_counter}/${#lst_audio_src_pass[@]} source files decoded"\\r
 		fi
-	fi
-
-	# FLAC target array
-	if [[ "${file##*.}" = "flac" ]]; then
-		lst_audio_wav_decoded+=( "$file" )
-	elif [[ "${file##*.}" = "wav" ]]; then
-		lst_audio_wav_decoded+=( "$file" )
-	else
-		lst_audio_wav_decoded+=( "${cache_dir}/${file##*/}.wav" )
 	fi
 
 done
@@ -556,8 +556,14 @@ for i in "${!lst_audio_wav_decoded[@]}"; do
 	# Array of FLAC target
 	lst_audio_flac_compressed+=( "${lst_audio_src_pass[i]%.*}.flac" )
 
+	# Array of source at remove
+	if [[ "${lst_audio_src[i]##*.}" != "flac" ]]; then
+		lst_audio_src_to_remove+=( "${lst_audio_src[i]}" )
+	fi
+
 	# Remove temp wav files
-	if [[ "${lst_audio_src[i]##*.}" != "wav" ]]; then
+	if [[ "${lst_audio_src[i]##*.}" != "wav" ]] \
+	|| [[ "${lst_audio_src[i]##*.}" != "flac" ]]; then
 		rm -f "${lst_audio_wav_decoded[i]%.*}.wav" 2>/dev/null
 	fi
 done
@@ -717,12 +723,12 @@ fi
 }
 # Remove source files
 remove_source_files() {
-if [ "${#lst_audio_flac_compressed[@]}" -gt 0 ] ; then
+if [[ "${#lst_audio_src_to_remove[@]}" -gt 0 ]] ; then
 	read -r -p "Remove source files? [y/N]:" qarm
 	case $qarm in
 		"Y"|"y")
 			# Remove source files
-			for file in "${lst_audio_src_pass[@]}"; do
+			for file in "${lst_audio_src_to_remove[@]}"; do
 				rm -f "$file" 2>/dev/null
 			done
 		;;
@@ -734,13 +740,13 @@ fi
 }
 # Remove target files
 remove_target_files() {
-if [ "$source_not_removed" = "1" ] ; then
+if [[ "$source_not_removed" = "1" ]] ; then
 	read -r -p "Remove target files? [y/N]:" qarm
 	case $qarm in
 		"Y"|"y")
 			# Remove source files
-			for file in "${lst_audio_flac_compressed[@]}"; do
-				rm -f "$file" 2>/dev/null
+			for file in "${lst_audio_src_to_remove[@]}"; do
+				rm -f "${lst_audio_src_to_remove%.*}.flac" 2>/dev/null
 			done
 		;;
 	esac
