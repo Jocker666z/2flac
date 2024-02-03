@@ -829,7 +829,7 @@ ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 flac_version=$(flac -v)
 flac_test_arg="--no-md5-sum --no-warnings-as-errors -s -t"
 flac_fix_arg="--totally-silent -f --verify --decode-through-errors"
-flac_compress_arg="-f -8 -e -p"
+flac_compress_arg="-f --lax -8pl32"
 flac_decode_arg="--totally-silent -f -d"
 # WAVPACK
 wavpack_test_arg="-q -v"
