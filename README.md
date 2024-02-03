@@ -9,7 +9,7 @@ Lossless audio codec supported: ALAC, APE, DSF, FLAC, WAV, WAVPACK
 `curl https://raw.githubusercontent.com/Jocker666z/2flac/master/2flac.sh > /home/$USER/.local/bin/2flac && chmod +rx /home/$USER/.local/bin/2flac`
 
 ## Dependencies
-`ffmpeg flac wavpack`
+`ffmpeg flac mutagen-inspect`
 
 ## Use
 Processes all compatible files in the current directory and his three subdirectories.
@@ -23,13 +23,15 @@ Options:
   --wav_only              Compress only WAV source.
   --wavpack_only          Compress only WAVPACK source.
   -v, --verbose           More verbose, for debug.
+
+Supported source files:
+  * ALAC in .caf .m4a
+  * DSD in .dsf
+  * FLAC in .flac .ogg
+  * Monkey's Audio in .ape
+  * WAVPACK in .wv
+  * WAV in .wav
 ```
-* ALAC as .m4a
-* DSD as .dsf
-* FLAC as .flac .ogg
-* Monkey's Audio as .ape
-* WAVPACK as .wv
-* WAV as .wav
 
 Notes: 
 * FLAC compression is `--lax -8pl32`.

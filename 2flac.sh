@@ -28,14 +28,16 @@ for i in "${!lst_audio_src[@]}"; do
 	fi
 
 	if [[ "${alac_only}" = "1" ]] \
-	&& [[ "${lst_audio_src[i]##*.}" != "m4a" ]]; then
+	&& [[ "${lst_audio_src[i]##*.}" != "caf" \
+	   && "${lst_audio_src[i]##*.}" != "m4a" ]]; then
 			unset "lst_audio_src[i]"
 	fi
 	# Keep only ALAC codec in m4a
-	if [[ "${lst_audio_src[i]##*.}" = "m4a" ]]; then
+	if [[ "${lst_audio_src[i]##*.}" = "caf" ]] \
+	|| [[ "${lst_audio_src[i]##*.}" = "m4a" ]]; then
 		codec_test=$(ffprobe -v error -select_streams a:0 \
 			-show_entries stream=codec_name -of csv=s=x:p=0 \
-			"${lst_audio_src[i]%.*}.m4a" )
+			"${lst_audio_src[i]}" )
 		if [[ "$codec_test" != "alac" ]]; then
 			unset "lst_audio_src[i]"
 		fi
@@ -61,7 +63,7 @@ for i in "${!lst_audio_src[@]}"; do
 	if [[ "${lst_audio_src[i]##*.}" = "ogg" ]]; then
 		codec_test=$(ffprobe -v error -select_streams a:0 \
 			-show_entries stream=codec_name -of csv=s=x:p=0 \
-			"${lst_audio_src[i]%.*}.ogg" )
+			"${lst_audio_src[i]}" )
 		if [[ "$codec_test" != "flac" ]]; then
 			unset "lst_audio_src[i]"
 		fi
@@ -181,6 +183,7 @@ for file in "${lst_audio_src_pass[@]}"; do
 	(
 
 	if [[ "${file##*.}" = "ape" ]] \
+	|| [[ "${file##*.}" = "caf" ]] \
 	|| [[ "${file##*.}" = "m4a" ]] \
 	|| [[ "${file##*.}" = "wv" ]]; then
 		ffmpeg $ffmpeg_log_lvl -y -i "$file" "${cache_dir}/${file##*/}.wav"
@@ -249,6 +252,8 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	# Target file
 	if [[ -s "${file%.*}.ape" ]]; then
 		file="${file%.*}.ape"
+	elif [[ -s "${file%.*}.caf" ]]; then
+		file="${file%.*}.caf"
 	elif [[ -s "${file%.*}.dsf" ]]; then
 		file="${file%.*}.dsf"
 	elif [[ -s "${file%.*}.m4a" ]]; then
@@ -258,7 +263,19 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	fi
 
 	# Source file tags array
-	mapfile -t source_tag < <( mutagen-inspect "$file" )
+	if [[ -s "${file%.*}.caf" ]]; then
+		# Source file tags array
+		mapfile -t source_tag < <( ffprobe -v error \
+									-show_entries stream_tags:format_tags \
+									-of default=noprint_wrappers=1 "$file" )
+		# Clean array
+		for i in "${!source_tag[@]}"; do
+			source_tag[i]="${source_tag[i]//TAG:/}"
+		done
+	else
+		mapfile -t source_tag < <( mutagen-inspect "$file" )
+	fi
+
 	# Try to extract cover, if no cover in directory
 	if [[ ! -e "${file%/*}"/cover.jpg ]] \
 	&& [[ ! -e "${file%/*}"/cover.png ]]; then
@@ -783,12 +800,12 @@ Options:
   -v, --verbose           More verbose, for debug.
 
 Supported source files:
-  * ALAC as .m4a
-  * DSD as .dsf
-  * FLAC as .flac .ogg
-  * Monkey's Audio as .ape
-  * WAVPACK as .wv
-  * WAV as .wav
+  * ALAC in .caf .m4a
+  * DSD in .dsf
+  * FLAC in .flac .ogg
+  * Monkey's Audio in .ape
+  * WAVPACK in .wv
+  * WAV in .wav
 EOF
 }
 
@@ -800,7 +817,7 @@ cache_dir="/tmp/2flac"
 # Nb process parrallel (nb of processor)
 nproc=$(grep -cE 'processor' /proc/cpuinfo)
 # Input extention available
-input_ext="ape|dsf|flac|m4a|ogg|wv|wav"
+input_ext="ape|caf|dsf|flac|m4a|ogg|wv|wav"
 # FFMPEG
 ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 # FLAC
