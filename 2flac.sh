@@ -819,6 +819,16 @@ for command in "${core_dependencies[@]}"; do
 done
 command_display "2flac"
 }
+# Cache
+cache() {
+# Check cache directory
+if [ ! -d "$cache_dir" ]; then
+	mkdir "$cache_dir"
+fi
+
+# Consider if file exist in cache directory after 1 days, delete it
+find "$cache_dir/" -type f -mtime +1 -exec /bin/rm -f {} \;
+}
 # Usage print
 usage() {
 cat <<- EOF
@@ -996,13 +1006,8 @@ esac
 shift
 done
 
-# Check cache directory
-if [ ! -d "$cache_dir" ]; then
-	mkdir "$cache_dir"
-fi
-
-# Consider if file exist in cache directory after 1 days, delete it
-find "$cache_dir/" -type f -mtime +1 -exec /bin/rm -f {} \;
+# Cache test
+cache
 
 # Test dependencies
 command_test
