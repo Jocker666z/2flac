@@ -522,8 +522,8 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	# Delete embedded
 	if [[ -n "$cover_test" ]]; then
 		metaflac --remove \
-			--block-type=PICTURE,PADDING \
-			--dont-use-padding "${file%.*}.flac"
+			--block-type=PICTURE \
+			"${file%.*}.flac"
 	fi
 
 done
