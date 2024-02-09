@@ -38,7 +38,8 @@ for i in "${!lst_audio_src[@]}"; do
 		codec_test=$(ffprobe -v error -select_streams a:0 \
 			-show_entries stream=codec_name -of csv=s=x:p=0 \
 			"${lst_audio_src[i]}" )
-		if [[ "$codec_test" != "alac" ]]; then
+		if [[ "$codec_test" != "alac" ]] \
+		&& [[ "$codec_test" != "pcm_"* ]]; then
 			unset "lst_audio_src[i]"
 		fi
 	fi
@@ -254,8 +255,6 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	# Target file
 	if [[ -s "${file%.*}.ape" ]]; then
 		file="${file%.*}.ape"
-	elif [[ -s "${file%.*}.caf" ]]; then
-		file="${file%.*}.caf"
 	elif [[ -s "${file%.*}.dsf" ]]; then
 		file="${file%.*}.dsf"
 	elif [[ -s "${file%.*}.m4a" ]]; then
@@ -270,31 +269,20 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	if [[ "$exclude_from_tag_loop" != "1" ]]; then
 
 		# Source file tags array
-		if [[ -s "${file%.*}.caf" ]]; then
-			# Source file tags array
-			mapfile -t source_tag < <( ffprobe -v error \
-										-show_entries stream_tags:format_tags \
-										-of default=noprint_wrappers=1 "$file" )
-			# Clean array
+		mapfile -t source_tag < <( mutagen-inspect "$file" )
+		# itune need clean
+		if [[ -s "${file%.*}.m4a" ]]; then
 			for i in "${!source_tag[@]}"; do
-				source_tag[i]="${source_tag[i]//TAG:/}"
+				source_tag[i]="${source_tag[i]//MP4FreeForm(b\'/}"
+				source_tag[i]="${source_tag[i]//\', <AtomDataType.UTF8: 1>)/}"
+				if [[ "${source_tag[i]}" = "disk="* ]] \
+				|| [[ "${source_tag[i]}" = *"trkn="* ]]; then
+					source_tag[i]="${source_tag[i]//disk=(/disk=}"
+					source_tag[i]="${source_tag[i]//trkn=(/trkn=}"
+					source_tag[i]="${source_tag[i]//, //}"
+					source_tag[i]="${source_tag[i]//)/}"
+				fi
 			done
-		else
-			mapfile -t source_tag < <( mutagen-inspect "$file" )
-			# itune need clean
-			if [[ -s "${file%.*}.m4a" ]]; then
-				for i in "${!source_tag[@]}"; do
-					source_tag[i]="${source_tag[i]//MP4FreeForm(b\'/}"
-					source_tag[i]="${source_tag[i]//\', <AtomDataType.UTF8: 1>)/}"
-					if [[ "${source_tag[i]}" = "disk="* ]] \
-					|| [[ "${source_tag[i]}" = *"trkn="* ]]; then
-						source_tag[i]="${source_tag[i]//disk=(/disk=}"
-						source_tag[i]="${source_tag[i]//trkn=(/trkn=}"
-						source_tag[i]="${source_tag[i]//, //}"
-						source_tag[i]="${source_tag[i]//)/}"
-					fi
-				done
-			fi
 		fi
 
 		# Try to extract cover, if no cover in directory
@@ -553,7 +541,8 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 
 
 	# If FLAC src = try to extract cover if no cover in directory & remove embedded
-	if [[ ! -s "${file%.*}.wav" ]] \
+	if [[ ! -s "${file%.*}.caf" ]] \
+	&& [[ ! -s "${file%.*}.wav" ]] \
 	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
 		cover_test=$(metaflac --list "${file%.*}.flac" \
 						| grep -A 8 METADATA 2>/dev/null \
