@@ -903,8 +903,8 @@ Supported source files:
   * DSD in .dsf
   * FLAC in .flac .ogg
   * Monkey's Audio in .ape
+  * PCM in .caf .wav
   * WAVPACK in .wv
-  * WAV in .wav
 EOF
 }
 
