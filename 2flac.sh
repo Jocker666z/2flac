@@ -70,6 +70,11 @@ for i in "${!lst_audio_src[@]}"; do
 		fi
 	fi
 
+	if [[ "$tta_only}" = "1" ]] \
+	&& [[ "${lst_audio_src[i]##*.}" != "tta" ]]; then
+			unset "lst_audio_src[i]"
+	fi
+
 	if [[ "${wav_only}" = "1" ]] \
 	&& [[ "${lst_audio_src[i]##*.}" != "wav" ]]; then
 			unset "lst_audio_src[i]"
@@ -186,6 +191,7 @@ for file in "${lst_audio_src_pass[@]}"; do
 	if [[ "${file##*.}" = "ape" ]] \
 	|| [[ "${file##*.}" = "caf" ]] \
 	|| [[ "${file##*.}" = "m4a" ]] \
+	|| [[ "${file##*.}" = "tta" ]] \
 	|| [[ "${file##*.}" = "wv" ]]; then
 		ffmpeg $ffmpeg_log_lvl -y -i "$file" "${cache_dir}/${file##*/}.wav"
 	elif [[ "${file##*.}" = "dsf" ]]; then
@@ -449,6 +455,8 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		file="${file%.*}.dsf"
 	elif [[ -s "${file%.*}.m4a" ]]; then
 		file="${file%.*}.m4a"
+	elif [[ -s "${file%.*}.tta" ]]; then
+		file="${file%.*}.tta"
 	elif [[ -s "${file%.*}.wv" ]]; then
 		file="${file%.*}.wv"
 	else
@@ -988,6 +996,7 @@ Options:
   --ape_only              Compress only Monkey's Audio source.
   --dsd_only              Compress only DSD source.
   --flac_only             Compress only FLAC source.
+  --tta_only              Compress only TTA source.
   --wav_only              Compress only WAV source.
   --wavpack_only          Compress only WAVPACK source.
   -v, --verbose           More verbose, for debug.
@@ -998,6 +1007,7 @@ Supported source files:
   * FLAC in .flac .ogg
   * Monkey's Audio in .ape
   * PCM in .caf .wav
+  * The True Audio in .tta
   * WAVPACK in .wv
 EOF
 }
@@ -1010,7 +1020,7 @@ cache_dir="/tmp/2flac"
 # Nb process parrallel (nb of processor)
 nproc=$(grep -cE 'processor' /proc/cpuinfo)
 # Input extention available
-input_ext="ape|caf|dsf|flac|m4a|ogg|wv|wav"
+input_ext="ape|caf|dsf|flac|m4a|ogg|tta|wv|wav"
 # FFMPEG
 ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 # FLAC

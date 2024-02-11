@@ -2,7 +2,7 @@
 
 Various lossless to FLAC while keeping the tags.
 
-Lossless audio codec supported: ALAC, APE, DSF, FLAC, WAV, WAVPACK
+Lossless audio codec supported: ALAC, APE, DSD, FLAC, TTA, WAV, WAVPACK
 
 --------------------------------------------------------------------------------------------------
 ## Install & update
@@ -20,6 +20,7 @@ Options:
   --ape_only              Compress only Monkey's Audio source.
   --dsd_only              Compress only DSD source.
   --flac_only             Compress only FLAC source.
+  --tta_only              Compress only TTA source.
   --wav_only              Compress only WAV source.
   --wavpack_only          Compress only WAVPACK source.
   -v, --verbose           More verbose, for debug.
@@ -30,6 +31,7 @@ Supported source files:
   * FLAC in .flac .ogg
   * Monkey's Audio in .ape
   * PCM in .caf .wav
+  * The True Audio in .tta
   * WAVPACK in .wv
 ```
 
