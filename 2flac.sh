@@ -70,7 +70,7 @@ for i in "${!lst_audio_src[@]}"; do
 		fi
 	fi
 
-	if [[ "$tta_only}" = "1" ]] \
+	if [[ "${tta_only}" = "1" ]] \
 	&& [[ "${lst_audio_src[i]##*.}" != "tta" ]]; then
 			unset "lst_audio_src[i]"
 	fi
@@ -916,6 +916,13 @@ if [[ "${#lst_audio_src_to_remove[@]}" -gt 0 ]] ; then
 			source_not_removed="1"
 		;;
 	esac
+else
+	read -r -p "Press an input for exit" qarm
+	case $qarm in
+		*)
+			return
+		;;
+	esac
 fi
 }
 # Remove target files
@@ -1139,6 +1146,9 @@ while [[ $# -gt 0 ]]; do
 	;;
 	"--flac_only")
 		flac_only="1"
+	;;
+	"--tta_only")
+		tta_only="1"
 	;;
 	"--wav_only")
 		wav_only="1"
