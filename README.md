@@ -9,12 +9,13 @@ Lossless audio codec supported: ALAC, APE, DSD, FLAC, TTA, WAV, WAVPACK
 `curl https://raw.githubusercontent.com/Jocker666z/2flac/master/2flac.sh > /home/$USER/.local/bin/2flac && chmod +rx /home/$USER/.local/bin/2flac`
 
 ## Dependencies
-`ffmpeg flac mutagen-inspect`
+`ffmpeg flac mutagen-inspect sox`
 
 ## Use
 Processes all compatible files in the current directory and his three subdirectories.
 ```
 Options:
+  --cd                    Force resample to 16bit/44.1kHz
   --16bits_only           Compress only 16bits source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
@@ -37,5 +38,7 @@ Supported source files:
 
 Notes: 
 * FLAC compression is `--lax -8pl32`.
-* DSF is converted at 24bit/192kHz, for a coherent final file size.
+* DSF is converted at 32bit/192kHz, for a coherent final file size.
 * Converted tags are according with musicbrainz (as far as possible) (https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html).
+* `--cd` option is destructive.
+* sox is used of resample with `--cd` option.

@@ -18,7 +18,8 @@ mapfile -t lst_audio_src < <(find "$PWD" -maxdepth 3 -type f -regextype posix-eg
 # Only clean
 for i in "${!lst_audio_src[@]}"; do
 
-	if [[ "${bits16_only}" = "1" ]]; then
+	if [[ "${bits16_only}" = "1" ]] \
+	&& [[ "${cd_resample}" != "1" ]]; then
 		codec_test=$(ffprobe -v error -select_streams a:0 \
 			-show_entries stream=sample_fmt -of csv=s=x:p=0 "${lst_audio_src[i]}"  )
 		if [[ "$codec_test" != "s16" ]] \
@@ -182,6 +183,8 @@ done
 # Decode source
 decode_source() {
 local decode_counter
+local test_bit
+local ffmpeg_arg_bit
 
 decode_counter="0"
 
@@ -193,10 +196,33 @@ for file in "${lst_audio_src_pass[@]}"; do
 	|| [[ "${file##*.}" = "m4a" ]] \
 	|| [[ "${file##*.}" = "tta" ]] \
 	|| [[ "${file##*.}" = "wv" ]]; then
-		ffmpeg $ffmpeg_log_lvl -y -i "$file" "${cache_dir}/${file##*/}.wav"
+
+		# Bit test, for prevent bad convert in auto
+		test_bit=$(ffprobe -v panic -show_entries \
+						stream=sample_fmt -print_format csv=p=0 "$file")
+		# 8 & 16bit
+		if [[ "$test_bit" == "s8"* ]] \
+		|| [[ "$test_bit" == "u8"* ]] \
+		|| [[ "$test_bit" == "s16"* ]]; then
+			ffmpeg_arg_bit="-c:a pcm_s16le"
+		# 24bit
+		elif [[ "$test_bit" == "s24"* ]]; then
+			ffmpeg_arg_bit="-c:a pcm_s24le"
+		# 32 & 64bit
+		elif [[ "$test_bit" == "s32"* ]] \
+		  || [[ "$test_bit" = "f32" ]] \
+		  || [[ "$test_bit" = "fltp" ]] \
+		  || [[ "$test_bit" == "f64"* ]] \
+		  || [[ "$test_bit" == "s64"* ]] \
+		  || [[ "$test_bit" = "dblp" ]]; then
+			ffmpeg_arg_bit="-c:a pcm_s32le"
+		fi
+
+		ffmpeg $ffmpeg_log_lvl -y -i "$file" $ffmpeg_arg_bit "${cache_dir}/${file##*/}.wav"
 	elif [[ "${file##*.}" = "dsf" ]]; then
 		ffmpeg $ffmpeg_log_lvl -y -i "$file" \
-			-c:a pcm_s24le -ar 384000 "${cache_dir}/${file##*/}.wav"
+			-c:a pcm_s32le -ar 384000 \
+			"${cache_dir}/${file##*/}.wav"
 	fi
 
 	) &
@@ -748,6 +774,53 @@ for i in "${!lst_audio_wav_decoded[@]}"; do
 	fi
 done
 }
+# CD Resample 16/44.1
+cd_format() {
+local sox_counter
+
+sox_counter="0"
+
+if [[ "$cd_resample" = "1" ]]; then
+	for i in "${!lst_audio_flac_compressed[@]}"; do
+		if [[ "$verbose" = "1" ]]; then
+			sox -S "${lst_audio_flac_compressed[i]}" \
+				-b 16 "${cache_dir}/${lst_audio_flac_compressed[i]##*/}.sox.flac" \
+				rate -v -L -s 44100 dither
+		else
+			sox "${lst_audio_flac_compressed[i]}" \
+				-b 16 "${cache_dir}/${lst_audio_flac_compressed[i]##*/}.sox.flac" \
+				rate -v -L -s 44100 dither &>/dev/null
+		fi
+
+		# Test target & replace source
+		if flac $flac_test_arg "${cache_dir}/${lst_audio_flac_compressed[i]##*/}.sox.flac" 2>/dev/null; then
+			rm "${lst_audio_flac_compressed[i]}"
+			mv "${cache_dir}/${lst_audio_flac_compressed[i]##*/}.sox.flac" \
+				"${lst_audio_flac_compressed[i]}"
+			sox_counter=$((sox_counter+1))
+		fi
+
+		# Progress
+		if ! [[ "$verbose" = "1" ]]; then
+			if [[ "${#lst_audio_flac_compressed[@]}" = "1" ]]; then
+				echo -ne "${sox_counter}/${#lst_audio_flac_compressed[@]} flac file is being resampled"\\r
+			else
+				echo -ne "${sox_counter}/${#lst_audio_flac_compressed[@]} flac files are being resampled"\\r
+			fi
+		fi
+	done
+	
+	# Progress end
+	if ! [[ "$verbose" = "1" ]]; then
+		tput hpa 0; tput el
+		if [[ "${#lst_audio_flac_compressed[@]}" = "1" ]]; then
+			echo "${sox_counter} flac file resampled"
+		else
+			echo "${sox_counter} flac files resampled"
+		fi
+	fi
+fi
+}
 # Total size calculation in MB - Input must be in bytes
 calc_files_size() {
 local files
@@ -998,6 +1071,7 @@ Usage:
 2flac [options]
 
 Options:
+  --cd                    Force resample to 16bit/44.1kHz
   --16bits_only           Compress only 16bits source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
@@ -1020,7 +1094,7 @@ EOF
 }
 
 # Need Dependencies
-core_dependencies=(ffmpeg ffprobe flac metaflac mutagen-inspect)
+core_dependencies=(ffmpeg ffprobe flac metaflac mutagen-inspect sox)
 # Paths
 export PATH=$PATH:/home/$USER/.local/bin
 cache_dir="/tmp/2flac"
@@ -1132,6 +1206,9 @@ while [[ $# -gt 0 ]]; do
 		usage
 		exit
 	;;
+	"--cd")
+		cd_resample="1"
+	;;
 	"--16bits_only")
 		bits16_only="1"
 	;;
@@ -1195,6 +1272,9 @@ if (( "${#lst_audio_src[@]}" )); then
 
 	# Tag
 	tags_2_flac
+
+	# CD
+	cd_format
 
 	# End
 	summary_of_processing
