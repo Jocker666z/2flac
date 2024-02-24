@@ -36,7 +36,7 @@ Supported source files:
   * WAVPACK in .wv
 ```
 
-Notes: 
+## Notes
 * FLAC compression is `--lax -8pl32`.
 * DSF is converted at 32bit/192kHz, for a coherent final file size.
 * Converted tags are according with musicbrainz (as far as possible) (https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html).
