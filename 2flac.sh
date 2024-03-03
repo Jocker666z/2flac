@@ -821,6 +821,38 @@ if [[ "$cd_resample" = "1" ]]; then
 	fi
 fi
 }
+# Replay gain
+replay_gain() {
+local metaflac_counter
+
+metaflac_counter="0"
+
+if [[ "$replay_gain" = "1" ]]; then
+
+	for file in "${lst_audio_flac_compressed[@]}"; do
+		(
+		metaflac --add-replay-gain "$file"
+		) &
+		if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+			wait -n
+		fi
+
+		# Progress
+		metaflac_counter=$((metaflac_counter+1))
+		if ! [[ "$verbose" = "1" ]]; then
+			echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
+		fi
+	done
+	wait
+
+	# Progress end
+	if ! [[ "$verbose" = "1" ]]; then
+		tput hpa 0; tput el
+		echo "${metaflac_counter} replay gain applied"
+	fi
+
+fi
+}
 # Total size calculation in MB - Input must be in bytes
 calc_files_size() {
 local files
@@ -1072,6 +1104,7 @@ Usage:
 
 Options:
   --cd                    Force resample to 16bit/44.1kHz
+  --replay-gain           Apply ReplayGain to each track.
   --16bits_only           Compress only 16bits source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
@@ -1209,6 +1242,9 @@ while [[ $# -gt 0 ]]; do
 	"--cd")
 		cd_resample="1"
 	;;
+	"--replay-gain")
+		replay_gain="1"
+	;;
 	"--16bits_only")
 		bits16_only="1"
 	;;
@@ -1275,6 +1311,9 @@ if (( "${#lst_audio_src[@]}" )); then
 
 	# CD
 	cd_format
+
+	# Replay gain
+	replay_gain
 
 	# End
 	summary_of_processing

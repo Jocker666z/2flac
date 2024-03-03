@@ -16,6 +16,7 @@ Processes all compatible files in the current directory and his three subdirecto
 ```
 Options:
   --cd                    Force resample to 16bit/44.1kHz
+  --replay-gain           Apply ReplayGain to each track.
   --16bits_only           Compress only 16bits source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
