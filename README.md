@@ -43,3 +43,4 @@ Supported source files:
 * Converted tags are according with musicbrainz (as far as possible) (https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html).
 * `--cd` option is destructive.
 * sox is used of resample with `--cd` option.
+* ReplayGain use `rsgain` by default (https://github.com/complexlogic/rsgain), if not installed use `metaflac`.

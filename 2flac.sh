@@ -824,14 +824,24 @@ fi
 # Replay gain
 replay_gain() {
 local metaflac_counter
+local rsgain_cmd
 
 metaflac_counter="0"
 
 if [[ "$replay_gain" = "1" ]]; then
 
+	# Select rsgain by default if installed
+	if command -v rsgain &>/dev/null; then
+		rsgain_cmd="1"
+	fi
+
 	for file in "${lst_audio_flac_compressed[@]}"; do
 		(
-		metaflac --add-replay-gain "$file"
+		if [[ -n "$rsgain_cmd" ]]; then
+			rsgain custom -q -c a -s i "$file"
+		else
+			metaflac --add-replay-gain "$file"
+		fi
 		) &
 		if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
 			wait -n
