@@ -781,31 +781,31 @@ local sox_counter
 sox_counter="0"
 
 if [[ "$cd_resample" = "1" ]]; then
-	for i in "${!lst_audio_flac_compressed[@]}"; do
+	for i in "${!lst_audio_wav_decoded[@]}"; do
 		if [[ "$verbose" = "1" ]]; then
-			sox -S "${lst_audio_flac_compressed[i]}" \
-				-b 16 "${cache_dir}/${lst_audio_flac_compressed[i]##*/}.sox.flac" \
+			sox -S "${lst_audio_wav_decoded[i]}" \
+				-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
 				rate -v -L -s 44100 dither
 		else
-			sox "${lst_audio_flac_compressed[i]}" \
-				-b 16 "${cache_dir}/${lst_audio_flac_compressed[i]##*/}.sox.flac" \
+			sox "${lst_audio_wav_decoded[i]}" \
+				-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
 				rate -v -L -s 44100 dither &>/dev/null
 		fi
 
 		# Test target & replace source
-		if flac $flac_test_arg "${cache_dir}/${lst_audio_flac_compressed[i]##*/}.sox.flac" 2>/dev/null; then
-			rm "${lst_audio_flac_compressed[i]}"
-			mv "${cache_dir}/${lst_audio_flac_compressed[i]##*/}.sox.flac" \
-				"${lst_audio_flac_compressed[i]}"
+		if flac $flac_test_arg "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" 2>/dev/null; then
+			rm "${lst_audio_wav_decoded[i]}"
+			mv "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+				"${lst_audio_wav_decoded[i]}"
 			sox_counter=$((sox_counter+1))
 		fi
 
 		# Progress
 		if ! [[ "$verbose" = "1" ]]; then
-			if [[ "${#lst_audio_flac_compressed[@]}" = "1" ]]; then
-				echo -ne "${sox_counter}/${#lst_audio_flac_compressed[@]} flac file is being resampled"\\r
+			if [[ "${#lst_audio_wav_decoded[@]}" = "1" ]]; then
+				echo -ne "${sox_counter}/${#lst_audio_wav_decoded[@]} flac file is being resampled"\\r
 			else
-				echo -ne "${sox_counter}/${#lst_audio_flac_compressed[@]} flac files are being resampled"\\r
+				echo -ne "${sox_counter}/${#lst_audio_wav_decoded[@]} flac files are being resampled"\\r
 			fi
 		fi
 	done
@@ -813,7 +813,7 @@ if [[ "$cd_resample" = "1" ]]; then
 	# Progress end
 	if ! [[ "$verbose" = "1" ]]; then
 		tput hpa 0; tput el
-		if [[ "${#lst_audio_flac_compressed[@]}" = "1" ]]; then
+		if [[ "${#lst_audio_wav_decoded[@]}" = "1" ]]; then
 			echo "${sox_counter} flac file resampled"
 		else
 			echo "${sox_counter} flac files resampled"
@@ -1313,14 +1313,14 @@ if (( "${#lst_audio_src[@]}" )); then
 	# Decode
 	decode_source
 
+	# CD
+	cd_format
+
 	# Compress
 	compress_flac
 
 	# Tag
 	tags_2_flac
-
-	# CD
-	cd_format
 
 	# Replay gain
 	replay_gain
