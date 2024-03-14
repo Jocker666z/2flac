@@ -1264,7 +1264,7 @@ while [[ $# -gt 0 ]]; do
 		cd_resample="1"
 	;;
 	"--fast")
-		flac_compress_arg="-f --fast"
+		flac_compress_arg="-f --compression-level-0"
 	;;
 	"--replay-gain")
 		replay_gain="1"

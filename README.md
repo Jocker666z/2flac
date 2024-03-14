@@ -45,3 +45,4 @@ Supported source files:
 * `--cd` option is destructive.
 * sox is used with `--cd` option.
 * ReplayGain use `rsgain` by default (https://github.com/complexlogic/rsgain), if not installed use `metaflac`.
+* `--fast` use compression level `--compression-level-0`.
