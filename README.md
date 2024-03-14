@@ -15,7 +15,8 @@ Lossless audio codec supported: ALAC, APE, DSD, FLAC, TTA, WAV, WAVPACK
 Processes all compatible files in the current directory and his three subdirectories.
 ```
 Options:
-  --cd                    Force resample to 16bit/44.1kHz
+  --cd                    Force resample to 16bit/44.1kHz.
+  --fast                  Use fast compress instead default.
   --replay-gain           Apply ReplayGain to each track.
   --16bits_only           Compress only 16bits source.
   --alac_only             Compress only ALAC source.
@@ -38,9 +39,9 @@ Supported source files:
 ```
 
 ## Notes
-* FLAC compression is `--lax -8pl32`.
+* Default FLAC compression is `--lax -8pl32`.
 * DSF is converted at 32bit/192kHz, for a coherent final file size.
 * Converted tags are according with musicbrainz (as far as possible) (https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html).
 * `--cd` option is destructive.
-* sox is used of resample with `--cd` option.
+* sox is used with `--cd` option.
 * ReplayGain use `rsgain` by default (https://github.com/complexlogic/rsgain), if not installed use `metaflac`.

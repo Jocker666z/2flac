@@ -1123,7 +1123,8 @@ Usage:
 2flac [options]
 
 Options:
-  --cd                    Force resample to 16bit/44.1kHz
+  --cd                    Force resample to 16bit/44.1kHz.
+  --fast                  Use fast compress instead default.
   --replay-gain           Apply ReplayGain to each track.
   --16bits_only           Compress only 16bits source.
   --alac_only             Compress only ALAC source.
@@ -1261,6 +1262,9 @@ while [[ $# -gt 0 ]]; do
 	;;
 	"--cd")
 		cd_resample="1"
+	;;
+	"--fast")
+		flac_compress_arg="-f --fast"
 	;;
 	"--replay-gain")
 		replay_gain="1"
