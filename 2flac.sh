@@ -777,21 +777,54 @@ done
 # CD Resample 16/44.1
 cd_format() {
 local sox_counter
+local source_hz
+local source_bit
 
 sox_counter="0"
 
 if [[ "$cd_resample" = "1" ]]; then
+
 	for i in "${!lst_audio_wav_decoded[@]}"; do
-		sox_counter=$((sox_counter+1))
+
+		# Test source
+		source_hz=$(sox --i -r "${lst_audio_wav_decoded[i]}")
+		source_bit=$(sox --i -b "${lst_audio_wav_decoded[i]}")
+
+		# Counter
+		if [[ "$source_hz" != "44100" ]] \
+		|| [[ "$source_bit" != "16" ]]; then
+			sox_counter=$((sox_counter+1))
+		fi
+
+		# Resample
 		(
 		if [[ "$verbose" = "1" ]]; then
-			sox -S "${lst_audio_wav_decoded[i]}" \
-				-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
-				rate -v -L -s 44100 dither
+			if [[ "$source_hz" != "44100" && "$source_bit" != "16" ]]; then
+				sox -S "${lst_audio_wav_decoded[i]}" \
+					-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					rate -v -L -s 44100 dither
+			elif [[ "$source_hz" != "44100" && "$source_bit" = "16" ]]; then
+				sox -S "${lst_audio_wav_decoded[i]}" \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					rate -v -L -s 44100 dither
+			elif [[ "$source_hz" = "44100" && "$source_bit" != "16" ]]; then
+				sox -S "${lst_audio_wav_decoded[i]}" \
+					-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac"
+			fi
 		else
-			sox "${lst_audio_wav_decoded[i]}" \
-				-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
-				rate -v -L -s 44100 dither &>/dev/null
+			if [[ "$source_hz" != "44100" && "$source_bit" != "16" ]]; then
+				sox "${lst_audio_wav_decoded[i]}" \
+					-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					rate -v -L -s 44100 dither &>/dev/null
+			elif [[ "$source_hz" != "44100" && "$source_bit" = "16" ]]; then
+				sox "${lst_audio_wav_decoded[i]}" \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					rate -v -L -s 44100 dither &>/dev/null
+			elif [[ "$source_hz" = "44100" && "$source_bit" != "16" ]]; then
+				sox "${lst_audio_wav_decoded[i]}" \
+					-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					&>/dev/null
+			fi
 		fi
 
 		# Test target & replace source
@@ -829,6 +862,7 @@ if [[ "$cd_resample" = "1" ]]; then
 			echo "${sox_counter} flac files resampled"
 		fi
 	fi
+
 fi
 }
 # Replay gain

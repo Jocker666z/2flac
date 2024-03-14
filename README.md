@@ -42,7 +42,6 @@ Supported source files:
 * Default FLAC compression is `--lax -8pl32`.
 * DSF is converted at 32bit/192kHz, for a coherent final file size.
 * Converted tags are according with musicbrainz (as far as possible) (https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html).
-* `--cd` option is destructive.
-* sox is used with `--cd` option.
+* `--cd` option is destructive, sox is used.
 * ReplayGain use `rsgain` by default (https://github.com/complexlogic/rsgain), if not installed use `metaflac`.
 * `--fast` use compression level `--compression-level-0`.
