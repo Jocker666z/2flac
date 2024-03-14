@@ -782,6 +782,8 @@ sox_counter="0"
 
 if [[ "$cd_resample" = "1" ]]; then
 	for i in "${!lst_audio_wav_decoded[@]}"; do
+		sox_counter=$((sox_counter+1))
+		(
 		if [[ "$verbose" = "1" ]]; then
 			sox -S "${lst_audio_wav_decoded[i]}" \
 				-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
@@ -797,7 +799,13 @@ if [[ "$cd_resample" = "1" ]]; then
 			rm "${lst_audio_wav_decoded[i]}"
 			mv "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
 				"${lst_audio_wav_decoded[i]}"
-			sox_counter=$((sox_counter+1))
+		else
+			sox_counter=$((sox_counter-1))
+		fi
+
+		) &
+		if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+			wait -n
 		fi
 
 		# Progress
@@ -808,8 +816,10 @@ if [[ "$cd_resample" = "1" ]]; then
 				echo -ne "${sox_counter}/${#lst_audio_wav_decoded[@]} flac files are being resampled"\\r
 			fi
 		fi
+
 	done
-	
+	wait
+
 	# Progress end
 	if ! [[ "$verbose" = "1" ]]; then
 		tput hpa 0; tput el
