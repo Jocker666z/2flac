@@ -986,7 +986,7 @@ else
 	echo "$perc"
 fi
 }
-# Display trick - print term tuncate
+# Display tricks
 display_list_truncate() {
 local list
 local term_widh_truncate
@@ -997,9 +997,9 @@ term_widh_truncate=$(stty size | awk '{print $2}' | awk '{ print $1 - 8 }')
 
 for line in "${list[@]}"; do
 	if [[ "${#line}" -gt "$term_widh_truncate" ]]; then
-		echo -e "  $line" | cut -c 1-"$term_widh_truncate" | awk '{print $0"..."}'
+		echo -e " $line" | cut -c 1-"$term_widh_truncate" | awk '{print $0"..."}'
 	else
-		echo -e "  $line"
+		echo -e " $line"
 	fi
 done
 }
@@ -1009,6 +1009,7 @@ local time_formated
 local file_target_files_size
 local file_diff_percentage
 local file_path_truncate
+local file_replaygain
 local total_target_files_size
 local total_diff_size
 local total_diff_percentage
@@ -1023,14 +1024,23 @@ if (( "${#lst_audio_src[@]}" )); then
 			file_target_files_size=$(get_files_size_bytes "${lst_audio_flac_compressed[i]}")
 			file_diff_percentage=$(calc_percent "${file_source_files_size[i]}" "$file_target_files_size")
 			filesPassSizeReduction+=( "$file_diff_percentage" )
-			file_path_truncate=$(echo "${lst_audio_flac_compressed[i]}" | rev | cut -d'/' -f-3 | rev)
-			filesPassLabel+=( "(${filesPassSizeReduction[i]}%) ~ .${file_path_truncate}" )
+			file_path_truncate=$(echo "${lst_audio_flac_compressed[i]}" | rev | cut -d'/' -f-2 | rev)
+			if [[ "$replay_gain" = "1" ]]; then
+				file_replaygain=$(mutagen-inspect "${lst_audio_flac_compressed[i]}" \
+									| grep "REPLAYGAIN_TRACK_GAIN")
+				file_replaygain="${file_replaygain//REPLAYGAIN_TRACK_GAIN=/}"
+				file_replaygain="${file_replaygain//[[:blank:]]/} ~ "
+				if [[ "${file_replaygain:0:1}" =~ ^[0-9]+$ ]]; then
+						file_replaygain="+${file_replaygain}"
+				fi
+			fi
+			filesPassLabel+=( "${filesPassSizeReduction[i]}% ~ ${file_replaygain}.${file_path_truncate}" )
 		done
 	fi
 	# All files rejected size label
 	if (( "${#lst_audio_src_rejected[@]}" )); then
 		for i in "${!lst_audio_src_rejected[@]}"; do
-			file_path_truncate=$(echo "${lst_audio_src_rejected[i]}" | rev | cut -d'/' -f-3 | rev)
+			file_path_truncate=$(echo "${lst_audio_src_rejected[i]}" | rev | cut -d'/' -f-2 | rev)
 			filesRejectedLabel+=( ".${file_path_truncate}" )
 		done
 	fi
@@ -1054,9 +1064,9 @@ if (( "${#lst_audio_src[@]}" )); then
 	fi
 	# Print all files stats
 	echo
-	echo "${#lst_audio_flac_compressed[@]}/${#lst_audio_src[@]} file(s) compressed to FLAC for a total of ${total_target_files_size}Mb."
-	echo "${total_diff_percentage}% difference with the source files, ${total_diff_size}Mb on ${total_source_files_size}Mb."
-	echo "Processing en: $(date +%D\ at\ %Hh%Mm) - Duration: ${time_formated}."
+	echo "${#lst_audio_flac_compressed[@]}/${#lst_audio_src[@]} file(s) compressed to FLAC for a total of ${total_target_files_size}MB."
+	echo "${total_diff_percentage}% difference with the source files, ${total_diff_size}MB on ${total_source_files_size}MB."
+	echo "Processing end: $(date +%D\ at\ %Hh%Mm) - Duration: ${time_formated}."
 	echo
 fi
 }
