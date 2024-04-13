@@ -671,13 +671,15 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	# If FLAC src = try to extract cover if no cover in directory & remove embedded
 	if [[ ! -s "${file%.*}.caf" ]] \
 	&& [[ ! -s "${file%.*}.wav" ]] \
-	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
+	&& [[ "$exclude_from_tag_loop" = "1" ]] \
+	&& [[ ! -e "${file%/*}"/cover.jpg ]] \
+	&& [[ ! -e "${file%/*}"/cover.png ]]; then
+
 		cover_test=$(metaflac --list "${file%.*}.flac" \
-						| grep -A 8 METADATA 2>/dev/null \
-						| grep -A 7 -B 1 PICTURE 2>/dev/null)
-		if [[ ! -e "${file%/*}"/cover.jpg ]] \
-		&& [[ ! -e "${file%/*}"/cover.png ]] \
-		&& [[ -n "$cover_test" ]]; then
+				| grep -A 8 METADATA 2>/dev/null \
+				| grep -A 7 -B 1 PICTURE 2>/dev/null)
+
+		if [[ -n "$cover_test" ]]; then
 			# Image type
 			cover_image_type=$(echo "$cover_test" \
 								| grep "MIME type" \
@@ -693,14 +695,25 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			metaflac "${file%.*}.flac" \
 				--export-picture-to="${file%/*}"/cover."$cover_ext"
 		fi
-		# Delete embedded
-		if [[ -n "$cover_test" ]]; then
-			metaflac "${file%.*}.flac" \
-				--remove --block-type=PICTURE,PADDING\
-				--dont-use-padding
-		fi
+
 	fi
 
+done
+
+# Delete embedded
+for file in "${lst_audio_flac_compressed[@]}"; do
+	(
+	if [[ ! -s "${file%.*}.caf" ]] \
+	&& [[ ! -s "${file%.*}.wav" ]] \
+	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
+		metaflac "${file%.*}.flac" \
+			--remove --block-type=PICTURE,PADDING\
+			--dont-use-padding
+	fi
+	) &
+	if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+		wait -n
+	fi
 done
 
 # Progress end
@@ -1031,7 +1044,7 @@ if (( "${#lst_audio_src[@]}" )); then
 				file_replaygain="${file_replaygain//REPLAYGAIN_TRACK_GAIN=/}"
 				file_replaygain="${file_replaygain//[[:blank:]]/} ~ "
 				if [[ "${file_replaygain:0:1}" =~ ^[0-9]+$ ]]; then
-						file_replaygain="+${file_replaygain}"
+					file_replaygain="+${file_replaygain}"
 				fi
 			fi
 			filesPassLabel+=( "${filesPassSizeReduction[i]}% ~ ${file_replaygain}.${file_path_truncate}" )
