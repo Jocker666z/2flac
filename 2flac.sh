@@ -700,12 +700,25 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 
 done
 
-# Delete embedded
+# FLAC->FLAC Delete embedded
 for file in "${lst_audio_flac_compressed[@]}"; do
+
+	# Reset
+	unset exclude_from_tag_loop
+
+	# Target file
+	if [[ ! -s "${file%.*}.ape" ]] \
+	&& [[ ! -s "${file%.*}.caf" ]] \
+	&& [[ ! -s "${file%.*}.dsf" ]] \
+	&& [[ ! -s "${file%.*}.m4a" ]] \
+	&& [[ ! -s "${file%.*}.tta" ]] \
+	&& [[ ! -s "${file%.*}.wv" ]] \
+	&& [[ ! -s "${file%.*}.wav" ]]; then
+		exclude_from_tag_loop="1"
+	fi
+
 	(
-	if [[ ! -s "${file%.*}.caf" ]] \
-	&& [[ ! -s "${file%.*}.wav" ]] \
-	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
+	if [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
 			--remove --block-type=PICTURE,PADDING\
 			--dont-use-padding
