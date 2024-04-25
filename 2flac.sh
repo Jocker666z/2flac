@@ -238,6 +238,8 @@ for file in "${lst_audio_src_pass[@]}"; do
 	else
 		decode_counter=$((decode_counter+1))
 		lst_audio_wav_decoded+=( "${cache_dir}/${file##*/}.wav" )
+		# Array of source at remove
+		lst_audio_src_to_remove+=( "$file" )
 	fi
 
 	# Progress
@@ -787,11 +789,6 @@ for i in "${!lst_audio_wav_decoded[@]}"; do
 	# Array of FLAC target
 	lst_audio_flac_compressed+=( "${lst_audio_src_pass[i]%.*}.flac" )
 
-	# Array of source at remove
-	if [[ "${lst_audio_src[i]##*.}" != "flac" ]]; then
-		lst_audio_src_to_remove+=( "${lst_audio_src[i]}" )
-	fi
-
 	# Remove temp wav files
 	if [[ "${lst_audio_src[i]##*.}" != "wav" ]] \
 	&& [[ "${lst_audio_src[i]##*.}" != "ogg" ]] \
@@ -894,7 +891,6 @@ fi
 # Replay gain
 replay_gain() {
 local metaflac_counter
-local rsgain_cmd
 
 metaflac_counter="0"
 
@@ -902,28 +898,38 @@ if [[ "$replay_gain" = "1" ]]; then
 
 	# Select rsgain by default if installed
 	if command -v rsgain &>/dev/null; then
-		rsgain_cmd="1"
-	fi
 
-	for file in "${lst_audio_flac_compressed[@]}"; do
-		(
-		if [[ -n "$rsgain_cmd" ]]; then
+		#eval rsgain custom -c a -s i $(printf ' %q' "${lst_audio_flac_compressed[@]}")
+
+		for file in "${lst_audio_flac_compressed[@]}"; do
 			rsgain custom -q -c a -s i "$file"
-		else
-			metaflac --add-replay-gain "$file"
-		fi
-		) &
-		if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
-			wait -n
-		fi
 
-		# Progress
-		metaflac_counter=$((metaflac_counter+1))
-		if ! [[ "$verbose" = "1" ]]; then
-			echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
-		fi
-	done
-	wait
+			# Progress
+			metaflac_counter=$((metaflac_counter+1))
+			if ! [[ "$verbose" = "1" ]]; then
+				echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
+			fi
+		done
+
+	else
+
+		for file in "${lst_audio_flac_compressed[@]}"; do
+			(
+				metaflac --add-replay-gain "$file"
+			) &
+			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+				wait -n
+			fi
+
+			# Progress
+			metaflac_counter=$((metaflac_counter+1))
+			if ! [[ "$verbose" = "1" ]]; then
+				echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
+			fi
+		done
+		wait
+
+	fi
 
 	# Progress end
 	if ! [[ "$verbose" = "1" ]]; then
@@ -1128,7 +1134,7 @@ if [[ "$source_not_removed" = "1" ]] ; then
 		"Y"|"y")
 			# Remove source files
 			for file in "${lst_audio_src_to_remove[@]}"; do
-				rm -f "${lst_audio_src_to_remove%.*}.flac" 2>/dev/null
+				rm -f "${file%.*}.flac" 2>/dev/null
 			done
 		;;
 	esac
