@@ -888,6 +888,76 @@ if [[ "$cd_resample" = "1" ]]; then
 
 fi
 }
+# Resample 48kHz
+khz48_format() {
+local sox_counter
+local source_hz
+
+sox_counter="0"
+
+if [[ "$khz48_format" = "1" ]]; then
+
+	for i in "${!lst_audio_wav_decoded[@]}"; do
+
+		# Test source
+		source_hz=$(sox --i -r "${lst_audio_wav_decoded[i]}")
+
+		# Counter
+		if [[ "$source_hz" -gt "48000" ]]; then
+			sox_counter=$((sox_counter+1))
+		fi
+
+		# Resample
+		(
+		if [[ "$verbose" = "1" ]] \
+		&& [[ "$source_hz" -gt "48000" ]]; then
+			sox -S "${lst_audio_wav_decoded[i]}" \
+				"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+				rate -v -L -s 48000 dither
+		elif [[ "$source_hz" -gt "48000" ]]; then
+			sox "${lst_audio_wav_decoded[i]}" \
+				"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+				rate -v -L -s 48000 dither &>/dev/null
+		fi
+
+		# Test target & replace source
+		if flac $flac_test_arg "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" 2>/dev/null; then
+			rm "${lst_audio_wav_decoded[i]}"
+			mv "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+				"${lst_audio_wav_decoded[i]}"
+		else
+			sox_counter=$((sox_counter-1))
+		fi
+
+		) &
+		if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+			wait -n
+		fi
+
+		# Progress
+		if ! [[ "$verbose" = "1" ]]; then
+			if [[ "${#lst_audio_wav_decoded[@]}" = "1" ]]; then
+				echo -ne "${sox_counter}/${#lst_audio_wav_decoded[@]} flac file is being resampled"\\r
+			else
+				echo -ne "${sox_counter}/${#lst_audio_wav_decoded[@]} flac files are being resampled"\\r
+			fi
+		fi
+
+	done
+	wait
+
+	# Progress end
+	if ! [[ "$verbose" = "1" ]]; then
+		tput hpa 0; tput el
+		if [[ "${#lst_audio_wav_decoded[@]}" = "1" ]]; then
+			echo "${sox_counter} flac file resampled"
+		else
+			echo "${sox_counter} flac files resampled"
+		fi
+	fi
+
+fi
+}
 # Replay gain
 replay_gain() {
 local metaflac_counter
@@ -1199,6 +1269,7 @@ Usage:
 2flac [options]
 
 Options:
+  --48khz                 Force resample to 48kHz.
   --cd                    Force resample to 16bit/44.1kHz.
   --fast                  Use fast compress instead default.
   --replay-gain           Apply ReplayGain to each track.
@@ -1336,8 +1407,21 @@ while [[ $# -gt 0 ]]; do
 		usage
 		exit
 	;;
+	"--48khz")
+		khz48_format="1"
+		if [[ "$khz48_format" = "1" ]] \
+		&& [[ "$cd_resample" = "1" ]]; then
+			echo "/!\ 48kHz or 44.1kHz, that's the question."
+			exit
+		fi
+	;;
 	"--cd")
 		cd_resample="1"
+		if [[ "$khz48_format" = "1" ]] \
+		&& [[ "$cd_resample" = "1" ]]; then
+			echo "/!\ 48kHz or 44.1kHz, that's the question."
+			exit
+		fi
 	;;
 	"--fast")
 		flac_compress_arg="-f --compression-level-0"
@@ -1403,8 +1487,9 @@ if (( "${#lst_audio_src[@]}" )); then
 	# Decode
 	decode_source
 
-	# CD
+	# Resample
 	cd_format
+	khz48_format
 
 	# Compress
 	compress_flac
