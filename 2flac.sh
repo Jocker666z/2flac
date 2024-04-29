@@ -724,7 +724,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		exclude_from_tag_loop="1"
 	fi
 
-	if [[ "$replay_gain" != "1" ]] \
+	if [[ "$replay_gain" = "1" ]] \
 	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
 			--remove-replay-gain
