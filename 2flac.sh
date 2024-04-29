@@ -494,6 +494,11 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	# Get tag if src != wav or flac
 	if [[ "$exclude_from_tag_loop" != "1" ]]; then
 
+		# If ReplayGain or not
+		if [[ "$replay_gain" != "1" ]]; then
+			Vorbis_whitelist=("${Vorbis_whitelist[@]}" "${Vorbis_whitelist_replaygain[@]}")
+		fi
+
 		# Source file tags array
 		mapfile -t source_tag < <( mutagen-inspect "$file" )
 		# itune need clean
@@ -670,7 +675,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	fi
 
 
-	# If FLAC src = try to extract cover if no cover in directory & remove embedded
+	# FLAC->FLAC try to extract cover (if no cover in directory)
 	if [[ ! -s "${file%.*}.caf" ]] \
 	&& [[ ! -s "${file%.*}.wav" ]] \
 	&& [[ "$exclude_from_tag_loop" = "1" ]] \
@@ -702,7 +707,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 
 done
 
-# FLAC->FLAC Delete embedded
+# FLAC->FLAC Delete embedded & ReplayGain if active
 for file in "${lst_audio_flac_compressed[@]}"; do
 
 	# Reset
@@ -719,10 +724,16 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		exclude_from_tag_loop="1"
 	fi
 
+	if [[ "$replay_gain" != "1" ]] \
+	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
+		metaflac "${file%.*}.flac" \
+			--remove-replay-gain
+	fi
+
 	(
 	if [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
-			--remove --block-type=PICTURE,PADDING\
+			--remove --block-type=PICTURE,PADDING \
 			--dont-use-padding
 	fi
 	) &
@@ -1377,13 +1388,6 @@ Vorbis_whitelist=(
 	'RELEASESTATUS'
 	'RELEASETYPE'
 	'REMIXER'
-	'REPLAYGAIN_ALBUM_GAIN'
-	'REPLAYGAIN_ALBUM_PEAK'
-	'REPLAYGAIN_ALBUM_RANGE'
-	'REPLAYGAIN_REFERENCE_LOUDNESS'
-	'REPLAYGAIN_TRACK_GAIN'
-	'REPLAYGAIN_TRACK_PEAK'
-	'REPLAYGAIN_TRACK_RANGE'
 	'SCRIPT'
 	'SHOWMOVEMENT'
 	'SUBTITLE'
@@ -1397,6 +1401,15 @@ Vorbis_whitelist=(
 	'WEBSITE'
 	'WORK'
 	'WRITER'
+)
+Vorbis_whitelist_replaygain=(
+	'REPLAYGAIN_ALBUM_GAIN'
+	'REPLAYGAIN_ALBUM_PEAK'
+	'REPLAYGAIN_ALBUM_RANGE'
+	'REPLAYGAIN_REFERENCE_LOUDNESS'
+	'REPLAYGAIN_TRACK_GAIN'
+	'REPLAYGAIN_TRACK_PEAK'
+	'REPLAYGAIN_TRACK_RANGE'
 )
 
 # Command arguments
