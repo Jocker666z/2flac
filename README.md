@@ -16,7 +16,7 @@ Processes all compatible files in the current directory and his three subdirecto
 ```
 Options:
   --48khz                 Force resample to 48kHz.
-  --cd                    Force resample to 16bit/44.1kHz.
+  --cd                    Force resample to stereo 16bit/44.1kHz.
   --fast                  Use fast compress instead default.
   --replay-gain           Apply ReplayGain to each track.
   --16bits_only           Compress only 16bits source.

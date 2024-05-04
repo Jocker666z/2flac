@@ -577,7 +577,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 					fi
 					if [[ "${tag}" = "LABEL" ]] \
 					&& [[ "${tag_label[i]}" = *"\xc"* ]]; then
-						tag_label[i]=$(printf "${tag_label[i]}")
+						tag_label[i]=$(printf "%b" "${tag_label[i]}")
 					fi
 
 
@@ -818,6 +818,7 @@ cd_format() {
 local sox_counter
 local source_hz
 local source_bit
+local source_channel
 
 sox_counter="0"
 
@@ -828,40 +829,97 @@ if [[ "$cd_resample" = "1" ]]; then
 		# Test source
 		source_hz=$(sox --i -r "${lst_audio_wav_decoded[i]}")
 		source_bit=$(sox --i -b "${lst_audio_wav_decoded[i]}")
+		source_channel=$(sox --i -c "${lst_audio_wav_decoded[i]}")
 
 		# Counter
 		if [[ "$source_hz" != "44100" ]] \
-		|| [[ "$source_bit" != "16" ]]; then
+		|| [[ "$source_bit" != "16" ]] \
+		|| [[ "$source_channel" != "2" ]]; then
 			sox_counter=$((sox_counter+1))
 		fi
 
 		# Resample
 		(
 		if [[ "$verbose" = "1" ]]; then
-			if [[ "$source_hz" != "44100" && "$source_bit" != "16" ]]; then
+			if [[ "$source_hz" != "44100" \
+				 && "$source_bit" != "16" \
+				 && "$source_channel" = "2" ]]; then
 				sox -S "${lst_audio_wav_decoded[i]}" \
 					-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
 					rate -v -L -s 44100 dither
-			elif [[ "$source_hz" != "44100" && "$source_bit" = "16" ]]; then
+			elif [[ "$source_hz" != "44100" \
+				 && "$source_bit" != "16" \
+				 && "$source_channel" != "2" ]]; then
+				sox -S "${lst_audio_wav_decoded[i]}" \
+					-c 2 -b 16 \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					rate -v -L -s 44100 dither
+			elif [[ "$source_hz" != "44100" \
+				 && "$source_bit" = "16" \
+				 && "$source_channel" = "2" ]]; then
 				sox -S "${lst_audio_wav_decoded[i]}" \
 					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
 					rate -v -L -s 44100 dither
-			elif [[ "$source_hz" = "44100" && "$source_bit" != "16" ]]; then
+			elif [[ "$source_hz" != "44100" \
+				 && "$source_bit" = "16" \
+				 && "$source_channel" != "2" ]]; then
 				sox -S "${lst_audio_wav_decoded[i]}" \
-					-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac"
+					-c 2 \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					rate -v -L -s 44100 dither
+			elif [[ "$source_hz" = "44100" \
+				 && "$source_bit" != "16" \
+				 && "$source_channel" = "2" ]]; then
+				sox -S "${lst_audio_wav_decoded[i]}" \
+					-b 16 \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac"
+			elif [[ "$source_hz" = "44100" \
+				 && "$source_bit" != "16" \
+				 && "$source_channel" != "2" ]]; then
+				sox -S "${lst_audio_wav_decoded[i]}" \
+					-c 2 -b 16 \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac"
 			fi
 		else
-			if [[ "$source_hz" != "44100" && "$source_bit" != "16" ]]; then
+			if [[ "$source_hz" != "44100" \
+				 && "$source_bit" != "16" \
+				 && "$source_channel" = "2" ]]; then
 				sox "${lst_audio_wav_decoded[i]}" \
 					-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
 					rate -v -L -s 44100 dither &>/dev/null
-			elif [[ "$source_hz" != "44100" && "$source_bit" = "16" ]]; then
+			elif [[ "$source_hz" != "44100" \
+				 && "$source_bit" != "16" \
+				 && "$source_channel" != "2" ]]; then
+				sox "${lst_audio_wav_decoded[i]}" \
+					-c 2 -b 16 \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					rate -v -L -s 44100 dither &>/dev/null
+			elif [[ "$source_hz" != "44100" \
+				 && "$source_bit" = "16" \
+				 && "$source_channel" = "2" ]]; then
 				sox "${lst_audio_wav_decoded[i]}" \
 					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
 					rate -v -L -s 44100 dither &>/dev/null
-			elif [[ "$source_hz" = "44100" && "$source_bit" != "16" ]]; then
+			elif [[ "$source_hz" != "44100" \
+				 && "$source_bit" = "16" \
+				 && "$source_channel" != "2" ]]; then
 				sox "${lst_audio_wav_decoded[i]}" \
-					-b 16 "${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					-c 2 \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					rate -v -L -s 44100 dither &>/dev/null
+			elif [[ "$source_hz" = "44100" \
+				 && "$source_bit" != "16" \
+				 && "$source_channel" = "2" ]]; then
+				sox "${lst_audio_wav_decoded[i]}" \
+					-b 16 \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
+					&>/dev/null
+			elif [[ "$source_hz" = "44100" \
+				 && "$source_bit" != "16" \
+				 && "$source_channel" != "2" ]]; then
+				sox "${lst_audio_wav_decoded[i]}" \
+					-c 2 -b 16 \
+					"${cache_dir}/${lst_audio_wav_decoded[i]##*/}.sox.flac" \
 					&>/dev/null
 			fi
 		fi
@@ -1286,7 +1344,7 @@ Usage:
 
 Options:
   --48khz                 Force resample to 48kHz.
-  --cd                    Force resample to 16bit/44.1kHz.
+  --cd                    Force resample to stereo 16bit/44.1kHz.
   --fast                  Use fast compress instead default.
   --replay-gain           Apply ReplayGain to each track.
   --16bits_only           Compress only 16bits source.
