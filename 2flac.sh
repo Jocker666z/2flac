@@ -575,6 +575,11 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 					|| [[ "${tag}" = "DISCNUMBER" ]]; then
 						tag_label[i]="${tag_label[i]%/*}"
 					fi
+					if [[ "${tag}" = "LABEL" ]] \
+					&& [[ "${tag_label[i]}" = *"\xc"* ]]; then
+						tag_label[i]=$(printf "${tag_label[i]}")
+					fi
+
 
 					if [[ "${tag}" = "ARTISTS" ]] \
 					&& [[ "${tag_label[i]}" = *"/"* ]]; then
@@ -640,7 +645,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 					else
 							# Array of tag
 							source_tag[i]="${tag}=${tag_label[i]}"
-						fi
+					fi
 
 						continue 2
 					# reject
