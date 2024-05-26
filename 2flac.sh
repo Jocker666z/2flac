@@ -1041,12 +1041,7 @@ metaflac_counter="0"
 if [[ "$replay_gain" = "1" ]]; then
 
 	for file in "${lst_audio_flac_compressed[@]}"; do
-		(
-			metaflac --add-replay-gain "$file"
-		) &
-		if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
-			wait -n
-		fi
+		metaflac --add-replay-gain "$file"
 
 		# Progress
 		metaflac_counter=$((metaflac_counter+1))
@@ -1054,7 +1049,6 @@ if [[ "$replay_gain" = "1" ]]; then
 			echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
 		fi
 	done
-	wait
 
 	# Progress end
 	if ! [[ "$verbose" = "1" ]]; then
