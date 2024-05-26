@@ -1038,56 +1038,23 @@ local metaflac_counter
 
 metaflac_counter="0"
 
-rsgain_cmd() {
-	local input
-	input="$1"
-	rsgain custom -q -p -c a -s i "$input"
-	# Progress
-	if ! [[ "$verbose" = "1" ]]; then
-		# Progress
-		#metaflac_counter=$((metaflac_counter+1))
-		echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
-	fi
-}
-
 if [[ "$replay_gain" = "1" ]]; then
 
-	# Select rsgain by default if installed
-	if command -v rsgain &>/dev/null; then
+	for file in "${lst_audio_flac_compressed[@]}"; do
+		(
+			metaflac --add-replay-gain "$file"
+		) &
+		if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+			wait -n
+		fi
 
-		for file in "${lst_audio_flac_compressed[@]}"; do
-			# Progress
-			metaflac_counter=$((metaflac_counter+1))
-
-			(
-			rsgain_cmd "$file"
-			) &
-			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
-				wait -n
-			fi
-
-		done
-		wait
-
-	else
-
-		for file in "${lst_audio_flac_compressed[@]}"; do
-			(
-				metaflac --add-replay-gain "$file"
-			) &
-			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
-				wait -n
-			fi
-
-			# Progress
-			metaflac_counter=$((metaflac_counter+1))
-			if ! [[ "$verbose" = "1" ]]; then
-				echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
-			fi
-		done
-		wait
-
-	fi
+		# Progress
+		metaflac_counter=$((metaflac_counter+1))
+		if ! [[ "$verbose" = "1" ]]; then
+			echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
+		fi
+	done
+	wait
 
 	# Progress end
 	if ! [[ "$verbose" = "1" ]]; then
