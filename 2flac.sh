@@ -729,7 +729,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		exclude_from_tag_loop="1"
 	fi
 
-	if [[ "$replay_gain" = "1" ]] \
+	if [[ "$replay_gain" = "1" || "$rm_replay_gain" = "1" ]] \
 	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
 			--remove-replay-gain
@@ -1038,22 +1038,36 @@ local metaflac_counter
 
 metaflac_counter="0"
 
+rsgain_cmd() {
+	local input
+	input="$1"
+	rsgain custom -q -p -c a -s i "$input"
+	# Progress
+	if ! [[ "$verbose" = "1" ]]; then
+		# Progress
+		#metaflac_counter=$((metaflac_counter+1))
+		echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
+	fi
+}
+
 if [[ "$replay_gain" = "1" ]]; then
 
 	# Select rsgain by default if installed
 	if command -v rsgain &>/dev/null; then
 
-		#eval rsgain custom -c a -s i $(printf ' %q' "${lst_audio_flac_compressed[@]}")
-
 		for file in "${lst_audio_flac_compressed[@]}"; do
-			rsgain custom -q -c a -s i "$file"
-
 			# Progress
 			metaflac_counter=$((metaflac_counter+1))
-			if ! [[ "$verbose" = "1" ]]; then
-				echo -ne "${metaflac_counter}/${#lst_audio_flac_compressed[@]} replay gain applied"\\r
+
+			(
+			rsgain_cmd "$file"
+			) &
+			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+				wait -n
 			fi
+
 		done
+		wait
 
 	else
 
@@ -1078,7 +1092,7 @@ if [[ "$replay_gain" = "1" ]]; then
 	# Progress end
 	if ! [[ "$verbose" = "1" ]]; then
 		tput hpa 0; tput el
-		echo "${metaflac_counter} replay gain applied"
+		echo "${#lst_audio_flac_compressed[@]} replay gain applied"
 	fi
 
 fi
@@ -1347,6 +1361,7 @@ Options:
   --cd                    Force resample to stereo 16bit/44.1kHz.
   --fast                  Use fast compress instead default.
   --replay-gain           Apply ReplayGain to each track.
+  --replay-gain-no        Not keep the ReplayGain.
   --16bits_only           Compress only 16bits source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
@@ -1504,6 +1519,9 @@ while [[ $# -gt 0 ]]; do
 	;;
 	"--replay-gain")
 		replay_gain="1"
+	;;
+	"--replay-gain-no")
+		rm_replay_gain="1"
 	;;
 	"--16bits_only")
 		bits16_only="1"
