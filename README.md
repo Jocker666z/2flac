@@ -46,3 +46,4 @@ Supported source files:
 * Converted tags are according with musicbrainz (as far as possible) (https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html).
 * `--cd` && `--48khz` options are destructive.
 * `--fast` use compression level `--compression-level-0`.
+* ReplayGain use `rsgain` by default (https://github.com/complexlogic/rsgain), if not installed use `metaflac`.
