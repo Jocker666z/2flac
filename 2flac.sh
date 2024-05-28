@@ -238,7 +238,10 @@ for file in "${lst_audio_src_pass[@]}"; do
 	else
 		decode_counter=$((decode_counter+1))
 		lst_audio_wav_decoded+=( "${cache_dir}/${file##*/}.wav" )
-		# Array of source at remove
+	fi
+
+	# Array of source at remove
+	if [[ "${file##*.}" != "flac" ]]; then
 		lst_audio_src_to_remove+=( "$file" )
 	fi
 
