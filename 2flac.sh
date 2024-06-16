@@ -121,6 +121,10 @@ for file in "${lst_audio_src[@]}"; do
 			if < "${cache_dir}/${file##*/}.decode_error.log" \
 				grep  -E "mjpeg.*APP fields" &>/dev/null; then
 				rm "${cache_dir}/${file##*/}.decode_error.log"
+			# [... @ ...] Unknown attached ... image/webp.
+			elif < "${cache_dir}/${file##*/}.decode_error.log" \
+				grep -E "*image/webp" &>/dev/null; then
+				rm "${cache_dir}/${file##*/}.decode_error.log"
 			fi
 		fi
 	fi
