@@ -705,6 +705,8 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 				cover_ext="png"
 			elif [[ "$cover_image_type" = "jpeg" ]]; then
 				cover_ext="jpg"
+			elif [[ "$cover_image_type" = "webp" ]]; then
+				cover_ext="webp"
 			fi
 			# Extract
 			metaflac "${file%.*}.flac" \
