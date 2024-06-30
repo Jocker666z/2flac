@@ -714,7 +714,20 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 
 done
 
-# FLAC->FLAC Delete embedded & ReplayGain if active
+# Delete ReplayGain if active
+if [[ "$replay_gain" = "1" || "$rm_replay_gain" = "1" ]]; then
+	for file in "${lst_audio_flac_compressed[@]}"; do
+		(
+			metaflac "${file%.*}.flac" \
+				--remove-replay-gain
+		) &
+		if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+			wait -n
+		fi
+	done
+fi
+
+# FLAC->FLAC Delete embedded
 if [[ "$extract_cover_no" != "1" ]]; then
 	flac_block_type="--remove --block-type=PICTURE,PADDING"
 else
@@ -741,8 +754,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
 			$flac_block_type \
-			--dont-use-padding \
-			--remove-replay-gain
+			--dont-use-padding
 	elif [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
 			$flac_block_type \
