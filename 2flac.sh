@@ -687,12 +687,10 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	fi
 
 
-	# FLAC->FLAC try to extract cover (if no cover in directory)
+	# FLAC->FLAC try to extract cover
 	if [[ ! -s "${file%.*}.caf" ]] \
 	&& [[ ! -s "${file%.*}.wav" ]] \
-	&& [[ "$exclude_from_tag_loop" = "1" ]] \
-	&& [[ ! -e "${file%/*}"/cover.jpg ]] \
-	&& [[ ! -e "${file%/*}"/cover.png ]]; then
+	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
 
 		cover_test=$(metaflac --list "${file%.*}.flac" \
 				| grep -A 8 METADATA 2>/dev/null \
@@ -703,7 +701,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			cover_image_type=$(echo "$cover_test" \
 								| grep "MIME type" \
 								| awk -F " " '{print $NF}' \
-								| awk -F "/" '{print $NF}'\
+								| awk -F "/" '{print $NF}' \
 								| head -1)
 			if [[ "$cover_image_type" = "png" ]]; then
 				cover_ext="png"
@@ -714,7 +712,7 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			fi
 			# Extract
 			metaflac "${file%.*}.flac" \
-				--export-picture-to="${file%/*}"/cover."$cover_ext"
+				--export-picture-to="${file%.*}.$cover_ext"
 		fi
 
 	fi
@@ -738,14 +736,14 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		exclude_from_tag_loop="1"
 	fi
 
+	(
 	if [[ "$replay_gain" = "1" || "$rm_replay_gain" = "1" ]] \
 	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
+			--remove --block-type=PICTURE,PADDING \
+			--dont-use-padding \
 			--remove-replay-gain
-	fi
-
-	(
-	if [[ "$exclude_from_tag_loop" = "1" ]]; then
+	elif [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
 			--remove --block-type=PICTURE,PADDING \
 			--dont-use-padding
