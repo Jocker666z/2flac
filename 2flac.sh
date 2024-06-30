@@ -123,7 +123,7 @@ for file in "${lst_audio_src[@]}"; do
 				rm "${cache_dir}/${file##*/}.decode_error.log"
 			# [... @ ...] Unknown attached ... image/webp.
 			elif < "${cache_dir}/${file##*/}.decode_error.log" \
-				grep -E "*image/webp" &>/dev/null; then
+				grep -E "image/webp" &>/dev/null; then
 				rm "${cache_dir}/${file##*/}.decode_error.log"
 			fi
 		fi
@@ -523,23 +523,6 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			done
 		fi
 
-		# Try to extract cover, if no cover in directory
-		if [[ ! -e "${file%/*}"/cover.jpg ]] \
-		&& [[ ! -e "${file%/*}"/cover.png ]]; then
-			cover_test=$(ffprobe -v error -select_streams v:0 \
-						-show_entries stream=codec_name -of csv=s=x:p=0 \
-						"$file" 2>/dev/null)
-			if [[ -n "$cover_test" ]]; then
-				if [[ "$cover_test" = "png" ]]; then
-					cover_ext="png"
-				elif [[ "$cover_test" = *"jpeg"* ]]; then
-					cover_ext="jpg"
-				fi
-				ffmpeg $ffmpeg_log_lvl -n -i "$file" \
-					"${file%/*}"/cover."$cover_ext" 2>/dev/null
-			fi
-		fi
-
 		# Remove empty tag label=
 		mapfile -t source_tag < <( printf '%s\n' "${source_tag[@]}" | grep "=" )
 
@@ -686,16 +669,28 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 
 	fi
 
-
-	# FLAC->FLAC try to extract cover
-	if [[ ! -s "${file%.*}.caf" ]] \
-	&& [[ ! -s "${file%.*}.wav" ]] \
-	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
-
+	# Try to extract cover
+	if [[ "$exclude_from_tag_loop" != "1" ]] \
+	&& [[ "$extract_cover_no" != "1" ]]; then
+		cover_test=$(ffprobe -v error -select_streams v:0 \
+					-show_entries stream=codec_name -of csv=s=x:p=0 \
+					"$file" 2>/dev/null)
+		if [[ -n "$cover_test" ]]; then
+			if [[ "$cover_test" = "png" ]]; then
+				cover_ext="png"
+			elif [[ "$cover_test" = *"jpeg"* ]]; then
+				cover_ext="jpg"
+			fi
+			ffmpeg $ffmpeg_log_lvl -n -i "$file" \
+				"${file%.*}.$cover_ext" 2>/dev/null
+		fi
+	elif [[ ! -s "${file%.*}.caf" ]] \
+	  && [[ ! -s "${file%.*}.wav" ]] \
+	  && [[ "$exclude_from_tag_loop" = "1" ]] \
+	  && [[ "$extract_cover_no" != "1" ]]; then
 		cover_test=$(metaflac --list "${file%.*}.flac" \
 				| grep -A 8 METADATA 2>/dev/null \
 				| grep -A 7 -B 1 PICTURE 2>/dev/null)
-
 		if [[ -n "$cover_test" ]]; then
 			# Image type
 			cover_image_type=$(echo "$cover_test" \
@@ -720,6 +715,11 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 done
 
 # FLAC->FLAC Delete embedded & ReplayGain if active
+if [[ "$extract_cover_no" != "1" ]]; then
+	flac_block_type="--remove --block-type=PICTURE,PADDING"
+else
+	flac_block_type="--remove --block-type=PADDING"
+fi
 for file in "${lst_audio_flac_compressed[@]}"; do
 
 	# Reset
@@ -740,12 +740,12 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	if [[ "$replay_gain" = "1" || "$rm_replay_gain" = "1" ]] \
 	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
-			--remove --block-type=PICTURE,PADDING \
+			$flac_block_type \
 			--dont-use-padding \
 			--remove-replay-gain
 	elif [[ "$exclude_from_tag_loop" = "1" ]]; then
 		metaflac "${file%.*}.flac" \
-			--remove --block-type=PICTURE,PADDING \
+			$flac_block_type \
 			--dont-use-padding
 	fi
 	) &
@@ -1362,6 +1362,7 @@ Options:
   --48khz                 Force resample to 48kHz.
   --cd                    Force resample to stereo 16bit/44.1kHz.
   --fast                  Use fast compress instead default.
+  --extract-cover-no      Keep cover in file.
   --replay-gain           Apply ReplayGain to each track.
   --replay-gain-no        Not keep the ReplayGain.
   --16bits_only           Compress only 16bits source.
@@ -1515,6 +1516,9 @@ while [[ $# -gt 0 ]]; do
 			echo "/!\ 48kHz or 44.1kHz, that's the question."
 			exit
 		fi
+	;;
+	"--extract-cover-no")
+		extract_cover_no="1"
 	;;
 	"--fast")
 		flac_compress_arg="-f --compression-level-0"

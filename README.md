@@ -18,6 +18,7 @@ Options:
   --48khz                 Force resample to 48kHz.
   --cd                    Force resample to stereo 16bit/44.1kHz.
   --fast                  Use fast compress instead default.
+  --extract-cover-no      Keep cover in file.
   --replay-gain           Apply ReplayGain to each track.
   --replay-gain-no        Not keep the ReplayGain.
   --16bits_only           Compress only 16bits source.
