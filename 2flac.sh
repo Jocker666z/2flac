@@ -467,6 +467,7 @@ local tag_label
 local grab_tag_counter
 local tag_trick
 local tag_trick_str
+local flac_block_type
 
 grab_tag_counter="0"
 
