@@ -730,43 +730,35 @@ fi
 
 # FLAC->FLAC Delete embedded
 if [[ "$extract_cover_no" != "1" ]]; then
-	flac_block_type="--remove --block-type=PICTURE,PADDING"
-else
-	flac_block_type="--remove --block-type=PADDING"
+	for file in "${lst_audio_flac_compressed[@]}"; do
+
+		# Reset
+		unset exclude_from_tag_loop
+
+		# Target file
+		if [[ ! -s "${file%.*}.ape" ]] \
+		&& [[ ! -s "${file%.*}.caf" ]] \
+		&& [[ ! -s "${file%.*}.dsf" ]] \
+		&& [[ ! -s "${file%.*}.m4a" ]] \
+		&& [[ ! -s "${file%.*}.tta" ]] \
+		&& [[ ! -s "${file%.*}.wv" ]] \
+		&& [[ ! -s "${file%.*}.wav" ]]; then
+			exclude_from_tag_loop="1"
+		fi
+
+		(
+		if [[ "$exclude_from_tag_loop" = "1" ]]; then
+			metaflac "${file%.*}.flac" \
+				--remove --block-type=PICTURE \
+				--dont-use-padding
+		fi
+		) &
+		if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
+			wait -n
+		fi
+	done
+	wait
 fi
-for file in "${lst_audio_flac_compressed[@]}"; do
-
-	# Reset
-	unset exclude_from_tag_loop
-
-	# Target file
-	if [[ ! -s "${file%.*}.ape" ]] \
-	&& [[ ! -s "${file%.*}.caf" ]] \
-	&& [[ ! -s "${file%.*}.dsf" ]] \
-	&& [[ ! -s "${file%.*}.m4a" ]] \
-	&& [[ ! -s "${file%.*}.tta" ]] \
-	&& [[ ! -s "${file%.*}.wv" ]] \
-	&& [[ ! -s "${file%.*}.wav" ]]; then
-		exclude_from_tag_loop="1"
-	fi
-
-	(
-	if [[ "$replay_gain" = "1" || "$rm_replay_gain" = "1" ]] \
-	&& [[ "$exclude_from_tag_loop" = "1" ]]; then
-		metaflac "${file%.*}.flac" \
-			$flac_block_type \
-			--dont-use-padding
-	elif [[ "$exclude_from_tag_loop" = "1" ]]; then
-		metaflac "${file%.*}.flac" \
-			$flac_block_type \
-			--dont-use-padding
-	fi
-	) &
-	if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
-		wait -n
-	fi
-done
-wait
 
 # Progress end
 if ! [[ "$verbose" = "1" ]]; then
@@ -1088,7 +1080,7 @@ if [[ "$replay_gain" = "1" ]]; then
 
 		for file in "${lst_audio_flac_compressed[@]}"; do
 			(
-				metaflac --add-replay-gain "$file"
+				metaflac --add-replay-gain "$file" --dont-use-padding
 			) &
 			if [[ $(jobs -r -p | wc -l) -ge $nproc ]]; then
 				wait -n
@@ -1414,7 +1406,7 @@ ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 flac_version=$(flac -v)
 flac_test_arg="--no-md5-sum --no-warnings-as-errors -s -t"
 flac_fix_arg="--totally-silent -f --verify --decode-through-errors"
-flac_compress_arg="-f --lax -8pl32"
+flac_compress_arg="-f -8 -p -r 15 -l 32 --lax --no-padding --no-seektable"
 # Tag whitelist according with:
 # https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html
 # Ommit: ENCODEDBY, ENCODERSETTINGS
