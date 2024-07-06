@@ -1173,12 +1173,10 @@ else
 			perc="${perc/./+0.}"
 		fi
 	fi
-	# If string = 0
+	# If string = 0 & if string start by integer add lead +
 	if [[ "${perc}" = "0" ]]; then
-		perc="0.00"
-	fi
-	# If string start by integer add lead +
-	if [[ "${perc:0:1}" =~ ^[0-9]+$ ]]; then
+		perc=" 0.00"
+	elif [[ "${perc:0:1}" =~ ^[0-9]+$ ]]; then
 			perc="+${perc}"
 	fi
 	# Keep only 5 first digit
