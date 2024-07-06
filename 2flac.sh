@@ -1173,6 +1173,10 @@ else
 			perc="${perc/./+0.}"
 		fi
 	fi
+	# If string = 0
+	if [[ "${perc}" = "0" ]]; then
+		perc="0.00"
+	fi
 	# If string start by integer add lead +
 	if [[ "${perc:0:1}" =~ ^[0-9]+$ ]]; then
 			perc="+${perc}"
