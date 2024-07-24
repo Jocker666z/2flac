@@ -493,6 +493,8 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 		file="${file%.*}.m4a"
 	elif [[ -s "${file%.*}.tta" ]]; then
 		file="${file%.*}.tta"
+	elif [[ -s "${file%.*}.wav" ]]; then
+		file="${file%.*}.wav"
 	elif [[ -s "${file%.*}.wv" ]]; then
 		file="${file%.*}.wv"
 	else
@@ -553,90 +555,90 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 					if [[ "${tag_name[i],,}" = "${tag,,}" ]] \
 					&& [[ -n "${tag_label[i]// }" ]]; then
 
-					# Picard std
-					if [[ "${tag}" = "TRACKNUMBER" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						source_tag+=( "TOTALTRACKS=${tag_label[i]#*/}" )
-					fi
-					if [[ "${tag}" = "DISCNUMBER" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						source_tag+=( "TOTALDISCS=${tag_label[i]#*/}" )
-					fi
-					if [[ "${tag}" = "TRACKNUMBER" ]] \
-					|| [[ "${tag}" = "DISCNUMBER" ]]; then
-						tag_label[i]="${tag_label[i]%/*}"
-					fi
-					if [[ "${tag}" = "LABEL" ]] \
-					&& [[ "${tag_label[i]}" = *"\xc"* ]]; then
-						tag_label[i]=$(printf "%b" "${tag_label[i]}")
-					fi
+						# Picard std
+						if [[ "${tag}" = "TRACKNUMBER" ]] \
+						&& [[ "${tag_label[i]}" = *"/"* ]]; then
+							source_tag+=( "TOTALTRACKS=${tag_label[i]#*/}" )
+						fi
+						if [[ "${tag}" = "DISCNUMBER" ]] \
+						&& [[ "${tag_label[i]}" = *"/"* ]]; then
+							source_tag+=( "TOTALDISCS=${tag_label[i]#*/}" )
+						fi
+						if [[ "${tag}" = "TRACKNUMBER" ]] \
+						|| [[ "${tag}" = "DISCNUMBER" ]]; then
+							tag_label[i]="${tag_label[i]%/*}"
+						fi
+						if [[ "${tag}" = "LABEL" ]] \
+						&& [[ "${tag_label[i]}" = *"\xc"* ]]; then
+							tag_label[i]=$(printf "%b" "${tag_label[i]}")
+						fi
 
 
-					if [[ "${tag}" = "ARTISTS" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
-										| tr "|" "\n" \
-										| awk '$1=$1' )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "ARTISTS=${type}" )
-						done
-					elif [[ "${tag}" = "MUSICBRAINZ_ARTISTID" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
-										| tr "|" "\n" \
-										| awk '$1=$1' )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "MUSICBRAINZ_ARTISTID=${type}" )
-						done
-					elif [[ "${tag}" = "ISRC" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
-										| tr "|" "\n" \
-										| awk '$1=$1' )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "ISRC=${type}" )
-						done
-					elif [[ "${tag}" = "LABEL" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
-										| tr "|" "\n" \
-										| awk '$1=$1' )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "LABEL=${type}" )
-						done
-					elif [[ "${tag}" = "MUSICBRAINZ_TRACKID" ]] \
-					&& [[ "${tag_label[i]}" = *"'"* ]]; then
-						tag_trick_str=$(echo "${tag_label[i]}" \
-									| cut  -d "'" -f2)
-						source_tag+=( "MUSICBRAINZ_TRACKID=${tag_trick_str}" )
-					elif [[ "${tag}" = "MUSICBRAINZ_ALBUMARTISTID" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
-										| tr "|" "\n" \
-										| awk '$1=$1' )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "MUSICBRAINZ_ALBUMARTISTID=${type}" )
-						done
-					elif [[ "${tag}" = "RELEASETYPE" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
-										| tr "|" "\n" \
-										| awk '$1=$1' )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "RELEASETYPE=${type}" )
-						done
-					elif [[ "${tag}" = "PERFORMER" ]] \
-					&& [[ "${tag_label[i]}" = *"/"* ]]; then
-						mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
-										| tr "|" "\n" \
-										| awk '$1=$1' )
-						for type in "${tag_trick[@]}"; do
-							source_tag+=( "PERFORMER=${type}" )
-						done
-					else
-							# Array of tag
-							source_tag[i]="${tag}=${tag_label[i]}"
-					fi
+						if [[ "${tag}" = "ARTISTS" ]] \
+						&& [[ "${tag_label[i]}" = *"/"* ]]; then
+							mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+											| tr "|" "\n" \
+											| awk '$1=$1' )
+							for type in "${tag_trick[@]}"; do
+								source_tag+=( "ARTISTS=${type}" )
+							done
+						elif [[ "${tag}" = "MUSICBRAINZ_ARTISTID" ]] \
+						&& [[ "${tag_label[i]}" = *"/"* ]]; then
+							mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+											| tr "|" "\n" \
+											| awk '$1=$1' )
+							for type in "${tag_trick[@]}"; do
+								source_tag+=( "MUSICBRAINZ_ARTISTID=${type}" )
+							done
+						elif [[ "${tag}" = "ISRC" ]] \
+						&& [[ "${tag_label[i]}" = *"/"* ]]; then
+							mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+											| tr "|" "\n" \
+											| awk '$1=$1' )
+							for type in "${tag_trick[@]}"; do
+								source_tag+=( "ISRC=${type}" )
+							done
+						elif [[ "${tag}" = "LABEL" ]] \
+						&& [[ "${tag_label[i]}" = *"/"* ]]; then
+							mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+											| tr "|" "\n" \
+											| awk '$1=$1' )
+							for type in "${tag_trick[@]}"; do
+								source_tag+=( "LABEL=${type}" )
+							done
+						elif [[ "${tag}" = "MUSICBRAINZ_TRACKID" ]] \
+						&& [[ "${tag_label[i]}" = *"'"* ]]; then
+							tag_trick_str=$(echo "${tag_label[i]}" \
+										| cut  -d "'" -f2)
+							source_tag+=( "MUSICBRAINZ_TRACKID=${tag_trick_str}" )
+						elif [[ "${tag}" = "MUSICBRAINZ_ALBUMARTISTID" ]] \
+						&& [[ "${tag_label[i]}" = *"/"* ]]; then
+							mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+											| tr "|" "\n" \
+											| awk '$1=$1' )
+							for type in "${tag_trick[@]}"; do
+								source_tag+=( "MUSICBRAINZ_ALBUMARTISTID=${type}" )
+							done
+						elif [[ "${tag}" = "RELEASETYPE" ]] \
+						&& [[ "${tag_label[i]}" = *"/"* ]]; then
+							mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+											| tr "|" "\n" \
+											| awk '$1=$1' )
+							for type in "${tag_trick[@]}"; do
+								source_tag+=( "RELEASETYPE=${type}" )
+							done
+						elif [[ "${tag}" = "PERFORMER" ]] \
+						&& [[ "${tag_label[i]}" = *"/"* ]]; then
+							mapfile -t tag_trick < <( echo "${tag_label[i]//\//|}" \
+											| tr "|" "\n" \
+											| awk '$1=$1' )
+							for type in "${tag_trick[@]}"; do
+								source_tag+=( "PERFORMER=${type}" )
+							done
+						else
+								# Array of tag
+								source_tag[i]="${tag}=${tag_label[i]}"
+						fi
 
 						continue 2
 					# reject
@@ -710,7 +712,6 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 			metaflac "${file%.*}.flac" \
 				--export-picture-to="${file%.*}.$cover_ext"
 		fi
-
 	fi
 
 done
@@ -1177,7 +1178,7 @@ else
 	if [[ "${perc}" = "0" ]]; then
 		perc=" 0.00"
 	elif [[ "${perc:0:1}" =~ ^[0-9]+$ ]]; then
-			perc="+${perc}"
+		perc="+${perc}"
 	fi
 	# Keep only 5 first digit
 	perc="${perc:0:5}"
