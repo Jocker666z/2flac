@@ -20,7 +20,7 @@ Options:
   --fast                  Use fast compress instead default.
   --extract-cover-no      Keep cover in file.
   --replay-gain           Apply ReplayGain to each track.
-  --replay-gain-no        Not keep the ReplayGain.
+  --replay-gain-no        Remove ReplayGain.
   --16bits_only           Compress only 16bits source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
@@ -29,6 +29,7 @@ Options:
   --tta_only              Compress only TTA source.
   --wav_only              Compress only WAV source.
   --wavpack_only          Compress only WAVPACK source.
+  -t, --tmp               Cache use /tmp instead /home/$USER/.cache.
   -v, --verbose           More verbose, for debug.
 
 Supported source files:
@@ -48,3 +49,4 @@ Supported source files:
 * `--cd` && `--48khz` options are destructive.
 * `--fast` use compression level `--compression-level-0`.
 * ReplayGain use `rsgain` by default (https://github.com/complexlogic/rsgain), if not installed use `metaflac`.
+* `--tmp` increase speed of decoding if you use tmpfs for /tmp directory, but keep in mind the size of this fs.

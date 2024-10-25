@@ -1372,7 +1372,7 @@ Options:
   --fast                  Use fast compress instead default.
   --extract-cover-no      Keep cover in file.
   --replay-gain           Apply ReplayGain to each track.
-  --replay-gain-no        Not keep the ReplayGain.
+  --replay-gain-no        Remove the ReplayGain.
   --16bits_only           Compress only 16bits source.
   --alac_only             Compress only ALAC source.
   --ape_only              Compress only Monkey's Audio source.
@@ -1381,6 +1381,7 @@ Options:
   --tta_only              Compress only TTA source.
   --wav_only              Compress only WAV source.
   --wavpack_only          Compress only WAVPACK source.
+  -t, --tmp               Cache use /tmp instead /home/$USER/.cache.
   -v, --verbose           More verbose, for debug.
 
 Supported source files:
@@ -1398,7 +1399,7 @@ EOF
 core_dependencies=(ffmpeg ffprobe flac metaflac mutagen-inspect sox)
 # Paths
 export PATH=$PATH:/home/$USER/.local/bin
-cache_dir="/tmp/2flac"
+cache_dir="/home/$USER/.cache/2flac"
 # Nb process parrallel (nb of processor)
 nproc=$(grep -cE 'processor' /proc/cpuinfo)
 # Input extention available
@@ -1560,6 +1561,9 @@ while [[ $# -gt 0 ]]; do
 	;;
 	"--wavpack_only")
 		wavpack_only="1"
+	;;
+	-t|--tmp)
+		cache_dir="/tmp/2flac"
 	;;
 	-v|--verbose)
 		verbose="1"
