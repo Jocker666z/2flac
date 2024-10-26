@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2001,SC2086,SC2207
+# shellcheck disable=SC2001,SC2086,SC2207,SC2030,SC2031
 # 2flac
 # Various lossless to FLAC while keeping the tags.
 # \(^o^)/ 
@@ -119,7 +119,7 @@ for file in "${lst_audio_src[@]}"; do
 		if [ -s "${cache_dir}/${file##*/}.decode_error.log" ]; then
 			# [mjpeg @ ...] unable to decode APP fields...
 			if < "${cache_dir}/${file##*/}.decode_error.log" \
-				grep  -E "mjpeg.*APP fields" &>/dev/null; then
+				grep -E "mjpeg.*APP fields" &>/dev/null; then
 				rm "${cache_dir}/${file##*/}.decode_error.log"
 			# [... @ ...] Unknown attached ... image/webp.
 			elif < "${cache_dir}/${file##*/}.decode_error.log" \
@@ -467,7 +467,6 @@ local tag_label
 local grab_tag_counter
 local tag_trick
 local tag_trick_str
-local flac_block_type
 
 grab_tag_counter="0"
 
@@ -819,7 +818,7 @@ for i in "${!lst_audio_wav_decoded[@]}"; do
 	# Array of FLAC target
 	lst_audio_flac_compressed+=( "${lst_audio_src_pass[i]%.*}.flac" )
 
-	# Remove temp wav files
+	# Remove temp files
 	if [[ "${lst_audio_src[i]##*.}" != "wav" ]] \
 	&& [[ "${lst_audio_src[i]##*.}" != "ogg" ]] \
 	&& [[ "${lst_audio_src[i]##*.}" != "flac" ]]; then
