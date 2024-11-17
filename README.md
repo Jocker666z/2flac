@@ -9,7 +9,7 @@ Lossless audio codec supported: ALAC, APE, DSD, FLAC, TTA, WAV, WAVPACK
 `curl https://raw.githubusercontent.com/Jocker666z/2flac/master/2flac.sh > /home/$USER/.local/bin/2flac && chmod +rx /home/$USER/.local/bin/2flac`
 
 ## Dependencies
-`ffmpeg flac mutagen-inspect sox`
+`ffmpeg flac python3-mutagen sox`
 
 ## Use
 Processes all compatible files in the current directory and his three subdirectories.

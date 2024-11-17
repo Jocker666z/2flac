@@ -121,8 +121,9 @@ for file in "${lst_audio_src[@]}"; do
 			if < "${cache_dir}/${file##*/}.decode_error.log" \
 				grep -E "mjpeg.*APP fields" &>/dev/null; then
 				rm "${cache_dir}/${file##*/}.decode_error.log"
+			fi
 			# [... @ ...] Unknown attached ... image/webp.
-			elif < "${cache_dir}/${file##*/}.decode_error.log" \
+			if < "${cache_dir}/${file##*/}.decode_error.log" \
 				grep -E "image/webp" &>/dev/null; then
 				rm "${cache_dir}/${file##*/}.decode_error.log"
 			fi
@@ -142,8 +143,14 @@ for file in "${lst_audio_src[@]}"; do
 	if [[ "${file##*.}" = "flac" ]]; then
 		# Error log test
 		if [ -s "${cache_dir}/${file##*/}.decode_error.log" ]; then
-			# Try to fix file
-			flac $flac_fix_arg "$file"
+			# WARNING, ID3v2 tag found
+			if < "${cache_dir}/${file##*/}.decode_error.log" \
+				grep -E "ID3v2 tag found" &>/dev/null; then
+				mid3v2 -D "$file" &>/dev/null
+			else
+				# Try to fix file
+				flac $flac_fix_arg "$file"
+			fi
 			# Re-test, if no valid 2 times exclude
 			flac $flac_test_arg "$file" 2>"${cache_dir}/${file##*/}.decode_error.log"
 		fi
