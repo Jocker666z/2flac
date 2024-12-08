@@ -51,7 +51,8 @@ for i in "${!lst_audio_src[@]}"; do
 	fi
 
 	if [[ "${dsd_only}" = "1" ]] \
-	&& [[ "${lst_audio_src[i]##*.}" != "dsf" ]]; then
+	&& [[ "${lst_audio_src[i]##*.}" != "dff" \
+	   && "${lst_audio_src[i]##*.}" != "dsf" ]]; then
 			unset "lst_audio_src[i]"
 	fi
 
@@ -230,7 +231,8 @@ for file in "${lst_audio_src_pass[@]}"; do
 		fi
 
 		ffmpeg $ffmpeg_log_lvl -y -i "$file" $ffmpeg_arg_bit "${cache_dir}/${file##*/}.wav"
-	elif [[ "${file##*.}" = "dsf" ]]; then
+	elif [[ "${file##*.}" = "dsf" ]] \
+	  || [[ "${file##*.}" = "dff" ]]; then
 		ffmpeg $ffmpeg_log_lvl -y -i "$file" \
 			-c:a pcm_s32le -ar 384000 \
 			"${cache_dir}/${file##*/}.wav"
@@ -493,6 +495,8 @@ for file in "${lst_audio_flac_compressed[@]}"; do
 	# Target file
 	if [[ -s "${file%.*}.ape" ]]; then
 		file="${file%.*}.ape"
+	elif [[ -s "${file%.*}.dff" ]]; then
+		file="${file%.*}.dff"
 	elif [[ -s "${file%.*}.dsf" ]]; then
 		file="${file%.*}.dsf"
 	elif [[ -s "${file%.*}.m4a" ]]; then
@@ -745,6 +749,7 @@ if [[ "$extract_cover_no" != "1" ]]; then
 		# Target file
 		if [[ ! -s "${file%.*}.ape" ]] \
 		&& [[ ! -s "${file%.*}.caf" ]] \
+		&& [[ ! -s "${file%.*}.dff" ]] \
 		&& [[ ! -s "${file%.*}.dsf" ]] \
 		&& [[ ! -s "${file%.*}.m4a" ]] \
 		&& [[ ! -s "${file%.*}.tta" ]] \
@@ -1392,7 +1397,7 @@ Options:
 
 Supported source files:
   * ALAC in .caf .m4a
-  * DSD in .dsf
+  * DSD in .dff .dsf
   * FLAC in .flac .ogg
   * Monkey's Audio in .ape
   * PCM in .caf .wav
@@ -1409,7 +1414,7 @@ cache_dir="/home/$USER/.cache/2flac"
 # Nb process parrallel (nb of processor)
 nproc=$(grep -cE 'processor' /proc/cpuinfo)
 # Input extention available
-input_ext="ape|caf|dsf|flac|m4a|ogg|tta|wv|wav"
+input_ext="ape|caf|dff|dsf|flac|m4a|ogg|tta|wv|wav"
 # FFMPEG
 ffmpeg_log_lvl="-hide_banner -loglevel panic -nostats"
 # FLAC

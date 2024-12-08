@@ -34,7 +34,7 @@ Options:
 
 Supported source files:
   * ALAC in .caf .m4a
-  * DSD in .dsf
+  * DSD in .dff .dsf
   * FLAC in .flac .ogg
   * Monkey's Audio in .ape
   * PCM in .caf .wav
