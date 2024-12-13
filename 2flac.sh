@@ -234,7 +234,7 @@ for file in "${lst_audio_src_pass[@]}"; do
 	elif [[ "${file##*.}" = "dsf" ]] \
 	  || [[ "${file##*.}" = "dff" ]]; then
 		ffmpeg $ffmpeg_log_lvl -y -i "$file" \
-			-c:a pcm_s32le -ar 384000 \
+			-c:a pcm_s32le -ar 96000 \
 			"${cache_dir}/${file##*/}.wav"
 	fi
 

@@ -44,7 +44,7 @@ Supported source files:
 
 ## Notes
 * Default FLAC compression is `-8 -p -r 15 -l 32 --lax --no-padding --no-seektable`.
-* DSF is converted at 32bit/192kHz, for a coherent final file size.
+* DSD is converted at 32bit/96kHz, for a coherent final file size.
 * Converted tags are according with musicbrainz (as far as possible) (https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html).
 * `--cd` && `--48khz` options are destructive.
 * `--fast` use compression level `--compression-level-0`.
